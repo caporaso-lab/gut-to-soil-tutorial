@@ -1,0 +1,29 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: gut-to-soil-tutorial
+  title: The gut-to-soil axis microbiome analysis tutorial
+  # description:
+  # keywords: []
+  # authors: []
+  github: https://github.com/caporaso-lab/gut-to-soil-tutorial/
+  # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
+  references:
+    qiime2: https://develop.qiime2.org/en/latest/
+    amplicon-docs: https://amplicon-docs.readthedocs.io/en/latest/
+
+  plugins:
+    - type: executable
+      path: q2doc-plug.py
+
+  toc:
+    - file: intro.md
+    - file: gut-to-soil-16S-tutorial.md
+
+site:
+  template: https://github.com/ebolyen/myst-book-theme-poc.git
+  options:
+      folders: true
+      favicon: _static/favicon.ico
+      logo: _static/q2docs.png
+      pretty_urls: false
