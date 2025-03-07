@@ -321,11 +321,11 @@ Because most diversity metrics are sensitive to different sampling depths across
 For example, if you provide `--p-sampling-depth 500`, this step will subsample the counts in each sample without replacement so that each sample in the resulting table has a total count of 500.
 If the total count for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
 Choosing this value is tricky.
-We recommend making your choice by reviewing the information presented in the `table_ms2qzv` file that was created above.
+We recommend making your choice by reviewing the information presented in the `table_ms2.qzv` file that was created above.
 Choose a value that is as high as possible (so you retain more sequences per sample) while excluding as few samples as possible.
 
 :::{tip} Question.
-View the `table_ms2qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
+View the `table_ms2.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
 What value would you choose to pass for `--p-sampling-depth`?
 How many samples will be excluded from your analysis based on this choice?
 How many total sequences will you be analyzing in the `core-metrics-phylogenetic` command?
@@ -437,7 +437,7 @@ When grouping samples by metadata, it is therefore essential to look at the bott
 
 ::::{note}
 
-The value that you provide for `--p-max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `table_ms2qzv` file that was created above.
+The value that you provide for `--p-max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `table_ms2.qzv` file that was created above.
 In general, choosing a value that is somewhere around the median frequency seems to work well, but you may want to increase that value if the lines in the resulting rarefaction plot don't appear to be leveling out, or decrease that value if you seem to be losing many of your samples due to low total frequencies closer to the minimum sampling depth than the maximum sampling depth.
 ::::
 
