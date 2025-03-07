@@ -457,7 +457,7 @@ What do you think is happening here?
 
 ## Taxonomic analysis
 
-**Use weighted classifier.**
+**[Weighted classifier](https://data.qiime2.org/classifiers/sklearn-1.4.2/gtdb/gtdb_diverse_weighted_classifier_r220.qza) is using too much memory for RTD builds.**
 **Bump the annotation step up for an "upstream" versus "downstream" split in this document.**
 
 In the next sections we'll begin to explore the taxonomic composition of the samples, and again relate that to sample metadata.
@@ -484,11 +484,11 @@ def classifier_factory():
     from urllib import request
     from qiime2 import Artifact
     fp, _ = request.urlretrieve(
-        'https://data.qiime2.org/classifiers/sklearn-1.4.2/gtdb/gtdb_diverse_weighted_classifier_r220.qza')
+        'https://data.qiime2.org/classifiers/sklearn-1.4.2/greengenes/gg-13-8-99-515-806-nb-classifier.qza')
 
     return Artifact.load(fp)
 
-classifier = use.init_artifact('gtdb-diverse-weighted-classifier-r220', classifier_factory)
+classifier = use.init_artifact('16S-rRNA-classifier', classifier_factory)
 :::
 
 :::{describe-usage}
