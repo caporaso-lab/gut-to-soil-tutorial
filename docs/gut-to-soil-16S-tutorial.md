@@ -234,6 +234,9 @@ use.action(
 
 ## Generate a tree for phylogenetic diversity analyses
 
+**Replace with q2-kmerizer and q2-boots?**
+
+<!--
 :::{describe-usage}
 
 sepp_reference = use.init_artifact_from_url(
@@ -248,11 +251,11 @@ sepp_tree, _ = use.action(
                     action_id='sepp'),
     use.UsageInputs(representative_sequences=rep_seqs_ms2,
                     reference_database=sepp_reference,
-                    threads=4),
+                    threads=1),
     use.UsageOutputNames(tree='sepp-tree',
                          placements='placements'))
 :::
-
+-->
 
 QIIME supports several phylogenetic diversity metrics, including Faith's Phylogenetic Diversity and weighted and unweighted UniFrac.
 In addition to counts of features per sample (i.e., the data in the `FeatureTable[Frequency]` QIIME 2 artifact), these metrics require a rooted phylogenetic tree relating the features to one another.
@@ -333,7 +336,7 @@ How many total sequences will you be analyzing in the `core-metrics-phylogenetic
 
 :::{describe-usage}
 
-phylogeny = sepp_tree # de_novo_tree
+phylogeny = de_novo_tree # sepp_tree
 
 core_metrics_results = use.action(
     use.UsageAction(plugin_id='diversity',
@@ -455,6 +458,7 @@ What do you think is happening here?
 ## Taxonomic analysis
 
 **Use weighted classifier.**
+**Bump the annotation step up for an "upstream" versus "downstream" split in this document.**
 
 In the next sections we'll begin to explore the taxonomic composition of the samples, and again relate that to sample metadata.
 The first step in this process is to assign taxonomy to the sequences in our `FeatureData[Sequence]` QIIME 2 artifact.
