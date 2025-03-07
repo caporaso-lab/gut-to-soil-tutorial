@@ -182,6 +182,56 @@ use.action(
 )
 :::
 
+If you review the tabulated feature sequences, or the feature detail table of the feature table summary, you'll notice that there are many sequences that are observed in only a single sample.
+Let's filter those out to reduce the number of sequences we're working with - this will speed up several slower steps that are coming up.
+First we filter our feature table, and then we use the new feature table to filter our sequences to only the ones that are contained in the new table.
+We'll include `_ms2` in the new output names to remind us that these are filtered to those features in a **m**inimum of **2** **s**amples.
+
+:::{describe-usage}
+table_ms2, = use.action(
+    use.UsageAction(plugin_id='feature_table',
+                    action_id='filter_features'),
+    use.UsageInputs(table=table,
+                    min_samples=2),
+    use.UsageOutputNames(filtered_table='table_ms2'),
+)
+:::
+
+
+:::{describe-usage}
+rep_seqs_ms2, = use.action(
+    use.UsageAction(plugin_id='feature_table',
+                    action_id='filter_seqs'),
+    use.UsageInputs(data=rep_seqs,
+                    table=table_ms2),
+    use.UsageOutputNames(filtered_data='rep_seqs_ms2'),
+)
+:::
+
+:::{exercise}
+:label: filtered-feature-table-summary
+Now that you have a second filtered feature table, create your own command to summarize it, like we did for the original feature table.
+How many features did we lose as a result of this filter?
+How many total sequences did we lose?
+:::
+
+::::{solution} filtered-feature-table-summary
+:class: dropdown
+Here's the command you would use:
+
+:::{describe-usage}
+use.action(
+    use.UsageAction(plugin_id='feature_table',
+                    action_id='summarize_plus'),
+    use.UsageInputs(table=table_ms2,
+                    metadata=sample_metadata),
+    use.UsageOutputNames(summary='table_ms2',
+                         sample_frequencies='sample_frequencies_ms2',
+                         feature_frequencies='feature_frequencies_ms2'))
+:::
+::::
+
+
 ## Generate a tree for phylogenetic diversity analyses
 
 :::{describe-usage}
@@ -196,7 +246,7 @@ sepp_reference = use.init_artifact_from_url(
 sepp_tree, _ = use.action(
     use.UsageAction(plugin_id='fragment_insertion',
                     action_id='sepp'),
-    use.UsageInputs(representative_sequences=rep_seqs,
+    use.UsageInputs(representative_sequences=rep_seqs_ms2,
                     reference_database=sepp_reference,
                     threads=4),
     use.UsageOutputNames(tree='sepp-tree',
@@ -222,9 +272,9 @@ The FastTree program creates an unrooted tree, so in the final step in this sect
 _, _, _, de_novo_tree = use.action(
     use.UsageAction(plugin_id='phylogeny',
                     action_id='align_to_tree_mafft_fasttree'),
-    use.UsageInputs(sequences=rep_seqs),
-    use.UsageOutputNames(alignment='aligned_rep_seqs',
-                         masked_alignment='masked_aligned_rep_seqs',
+    use.UsageInputs(sequences=rep_seqs_ms2),
+    use.UsageOutputNames(alignment='aligned_rep_seqs_ms2',
+                         masked_alignment='masked_aligned_rep_seqs_ms2',
                          tree='unrooted_tree',
                          rooted_tree='de_novo_tree'))
 ::::
@@ -271,11 +321,11 @@ Because most diversity metrics are sensitive to different sampling depths across
 For example, if you provide `--p-sampling-depth 500`, this step will subsample the counts in each sample without replacement so that each sample in the resulting table has a total count of 500.
 If the total count for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
 Choosing this value is tricky.
-We recommend making your choice by reviewing the information presented in the `table.qzv` file that was created above.
+We recommend making your choice by reviewing the information presented in the `table_ms2qzv` file that was created above.
 Choose a value that is as high as possible (so you retain more sequences per sample) while excluding as few samples as possible.
 
 :::{tip} Question.
-View the `table.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
+View the `table_ms2qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
 What value would you choose to pass for `--p-sampling-depth`?
 How many samples will be excluded from your analysis based on this choice?
 How many total sequences will you be analyzing in the `core-metrics-phylogenetic` command?
@@ -289,10 +339,10 @@ core_metrics_results = use.action(
     use.UsageAction(plugin_id='diversity',
                     action_id='core_metrics_phylogenetic'),
     use.UsageInputs(phylogeny=phylogeny,
-                    table=table,
+                    table=table_ms2,
                     sampling_depth=250, # 9614 used for full demux.qza
                     metadata=sample_metadata),
-    use.UsageOutputNames(rarefied_table='rarefied_table',
+    use.UsageOutputNames(rarefied_table='rarefied_table_ms2,
                          faith_pd_vector='faith_pd_vector',
                          observed_features_vector='observed_features_vector',
                          shannon_vector='shannon_vector',
@@ -367,7 +417,7 @@ Average diversity values will be plotted for each sample at each even sampling d
 use.action(
     use.UsageAction(plugin_id='diversity',
                     action_id='alpha_rarefaction'),
-    use.UsageInputs(table=table,
+    use.UsageInputs(table=table_ms2,
                     phylogeny=phylogeny,
                     max_depth=250,
                     metadata=sample_metadata),
@@ -387,7 +437,7 @@ When grouping samples by metadata, it is therefore essential to look at the bott
 
 ::::{note}
 
-The value that you provide for `--p-max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `table.qzv` file that was created above.
+The value that you provide for `--p-max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `table_ms2qzv` file that was created above.
 In general, choosing a value that is somewhere around the median frequency seems to work well, but you may want to increase that value if the lines in the resulting rarefaction plot don't appear to be leveling out, or decrease that value if you seem to be losing many of your samples due to low total frequencies closer to the minimum sampling depth than the maximum sampling depth.
 ::::
 
@@ -443,7 +493,7 @@ taxonomy, = use.action(
     use.UsageAction(plugin_id='feature_classifier',
                     action_id='classify_sklearn'),
     use.UsageInputs(classifier=classifier,
-                    reads=rep_seqs),
+                    reads=rep_seqs_ms2),
     use.UsageOutputNames(classification='taxonomy'))
 
 taxonomy_as_md = use.view_as_metadata('taxonomy_as_md', taxonomy)
@@ -470,7 +520,7 @@ Generate those plots with the following command and then open the visualization.
 use.action(
     use.UsageAction(plugin_id='taxa',
                     action_id='barplot'),
-    use.UsageInputs(table=table,
+    use.UsageInputs(table=table_ms2,
                     taxonomy=taxonomy,
                     metadata=sample_metadata),
     use.UsageOutputNames(visualization='taxa_bar_plots'))
