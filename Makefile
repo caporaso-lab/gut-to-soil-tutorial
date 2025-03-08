@@ -18,3 +18,4 @@ serve:
 
 clean:
 	rm -rf docs/_build/html/
+	rm -rf docs/data
