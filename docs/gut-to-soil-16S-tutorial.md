@@ -2,25 +2,29 @@
 # Gut-to-soil axis 16S rRNA analysis tutorial 💩🌱
 
 :::{warning}
-This document is a work in progress as of 6 March 2025.
+This document is a work in progress as of 8 March 2025.
 As of this time, it's **not ready for use**, and only live for testing purposes.
+
 Commands/urls/text may be unreliable while in development.
+🚜
 :::
 
 :::{note}
-This guide assumes you have installed the QIIME 2 amplicon distribution, and have activated its conda environment.
+This guide assumes you are working in a QIIME 2 deployment containing the amplicon distribution and the standalone plugins [q2-boots](https://doi.org/10.12688/f1000research.156295.1) and [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24).
+The conda environment file used to create the deployment where the commands in this tutorial were run [can be found in the project's GitHub repository](https://github.com/caporaso-lab/gut-to-soil-tutorial/blob/main/environment-files/readthedocs.yml).
 :::
 
 ## Background
 
-In this tutorial you'll use the amplicon distribution of [QIIME 2](https://qiime2.org) to reproduce analyses presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://arxiv.org/abs/2411.04148).
-
+In this tutorial you'll learn an end-to-end microbiome data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
+The full data set for the paper can be found in [the paper's Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
+In the final step, you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
 
 The data used in this tutorial was generated using the [Earth Microbiome Project protocol](https://doi.org/10.1038/ismej.2012.8).
-Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified using the F515-R806 primers - a broad-coverage primer pair for Bacteria that also picks up some Archaea.
+Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified using the F515-R806 primers - a broad-coverage primer pair for Bacteria that also amplifies some Archaea.
 Paired-end sequencing was performed on an Illumina MiSeq.
-**See the paper for full details on sequencing.**
+Full details are presented in [Meilander *et al.* (2024)](https://doi.org/10.48550/arXiv.2411.04148).
 
 (gut-to-soil-tutorial:sample-metadata)=
 ## Sample metadata
@@ -124,7 +128,7 @@ Based on the plots you see in `demux.qzv`, what values would you choose for `--p
 :::
 
 In the `demux.qzv` quality plots, we see that the quality of the initial bases seems to be high, so we won't trim any bases from the beginning of the sequences.
-The quality seems good all the way out to the end, so we'll trim at 150 bases.
+The quality seems good all the way out to the end, so we'll trim at 250 bases.
 This next command may take up to 10 minutes to run, and is the slowest step in this tutorial.
 
 :::{describe-usage}
@@ -210,7 +214,7 @@ rep_seqs_ms2, = use.action(
 
 :::{exercise}
 :label: filtered-feature-table-summary
-Now that you have a second filtered feature table, create your own command to summarize it, like we did for the original feature table.
+Now that you have a second (filtered) feature table, create your own command to summarize it, like we did for the original feature table.
 How many features did we lose as a result of this filter?
 How many total sequences did we lose?
 :::
@@ -236,26 +240,25 @@ use.action(
 
 **Replace with q2-kmerizer and q2-boots?**
 
-<!--
 :::{describe-usage}
-
-sepp_reference = use.init_artifact_from_url(
-   'sepp-reference',
-   'https://data.qiime2.org/classifiers/sepp-ref-dbs/sepp-refs-gg-13-8.qza')
+kmer_table, = use.action(
+    use.UsageAction(plugin_id='kmerizer',
+                    action_id='seqs_to_kmers'),
+    use.UsageInputs(table=table_ms2,
+                    sequences=rep_seqs_ms2),
+    use.UsageOutputNames(kmer_table='kmer_table')
+)
 :::
 
 :::{describe-usage}
-
-sepp_tree, _ = use.action(
-    use.UsageAction(plugin_id='fragment_insertion',
-                    action_id='sepp'),
-    use.UsageInputs(representative_sequences=rep_seqs_ms2,
-                    reference_database=sepp_reference,
-                    threads=1),
-    use.UsageOutputNames(tree='sepp-tree',
-                         placements='placements'))
+use.action(
+    use.UsageAction(plugin_id='feature_table',
+                    action_id='summarize'),
+    use.UsageInputs(table=kmer_table,
+                    sample_metadata=sample_metadata),
+    use.UsageOutputNames(visualization='kmer_table')
+)
 :::
--->
 
 QIIME supports several phylogenetic diversity metrics, including Faith's Phylogenetic Diversity and weighted and unweighted UniFrac.
 In addition to counts of features per sample (i.e., the data in the `FeatureTable[Frequency]` QIIME 2 artifact), these metrics require a rooted phylogenetic tree relating the features to one another.
@@ -267,21 +270,6 @@ Next, the pipeline masks (or filters) the alignment to remove positions that are
 These positions are generally considered to add noise to a resulting phylogenetic tree.
 Following that, the pipeline applies FastTree to generate a phylogenetic tree from the masked alignment.
 The FastTree program creates an unrooted tree, so in the final step in this section midpoint rooting is applied to place the root of the tree at the midpoint of the longest tip-to-tip distance in the unrooted tree.
-
-```{note} Building a tree without a reference
-:class: dropdown
-::::{describe-usage}
-
-_, _, _, de_novo_tree = use.action(
-    use.UsageAction(plugin_id='phylogeny',
-                    action_id='align_to_tree_mafft_fasttree'),
-    use.UsageInputs(sequences=rep_seqs_ms2),
-    use.UsageOutputNames(alignment='aligned_rep_seqs_ms2',
-                         masked_alignment='masked_aligned_rep_seqs_ms2',
-                         tree='unrooted_tree',
-                         rooted_tree='de_novo_tree'))
-::::
-```
 
 ## Alpha and beta diversity analysis
 
@@ -327,46 +315,46 @@ Choosing this value is tricky.
 We recommend making your choice by reviewing the information presented in the `table_ms2.qzv` file that was created above.
 Choose a value that is as high as possible (so you retain more sequences per sample) while excluding as few samples as possible.
 
+:::{describe-usage}
+core_metrics = use.action(
+    use.UsageAction(plugin_id='boots',
+                    action_id='core_metrics'),
+    use.UsageInputs(table=kmer_table,
+                    metadata=sample_metadata,
+                    sampling_depth=62000,
+                    n=10,
+                    replacement=True,
+                    alpha_average_method='median',
+                    beta_average_method='medoid'),
+    use.UsageOutputNames(
+        resampled_tables='bootstrap_tables',
+        alpha_diversities='bootstrap_alpha_diversities',
+        distance_matrices='bootstrap_distance_matrices',
+        pcoas='bootstrap_pcoas',
+        emperor_plots='bootstrap_emperor_plots')
+)
+
+unweighted_dm = use.get_artifact_collection_member(
+    'unweighted_dm', core_metrics.distance_matrices, 'jaccard_distance_matrix')
+unweighted_pcoa = use.get_artifact_collection_member(
+    'unweighted_pcoa', core_metrics.pcoas, 'jaccard')
+
+weighted_dm = use.get_artifact_collection_member(
+    'weighted_dm', core_metrics.distance_matrices, 'braycurtis_distance_matrix')
+weighted_pcoa = use.get_artifact_collection_member(
+    'weighted_pcoa', core_metrics.pcoas, 'braycurtis')
+
+richness_vector = use.get_artifact_collection_member(
+    'richness_vector', core_metrics.alpha_diversities, 'observed_features')
+evenness_vector = use.get_artifact_collection_member(
+    'evenness_vector', core_metrics.alpha_diversities, 'evenness')
+:::
+
 :::{tip} Question.
 View the `table_ms2.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
 What value would you choose to pass for `--p-sampling-depth`?
 How many samples will be excluded from your analysis based on this choice?
 How many total sequences will you be analyzing in the `core-metrics-phylogenetic` command?
-:::
-
-:::{describe-usage}
-
-phylogeny = de_novo_tree # sepp_tree
-
-core_metrics_results = use.action(
-    use.UsageAction(plugin_id='diversity',
-                    action_id='core_metrics_phylogenetic'),
-    use.UsageInputs(phylogeny=phylogeny,
-                    table=table_ms2,
-                    sampling_depth=250, # 9614 used for full demux.qza
-                    metadata=sample_metadata),
-    use.UsageOutputNames(rarefied_table='rarefied_table_ms2',
-                         faith_pd_vector='faith_pd_vector',
-                         observed_features_vector='observed_features_vector',
-                         shannon_vector='shannon_vector',
-                         evenness_vector='evenness_vector',
-                         unweighted_unifrac_distance_matrix='unweighted_unifrac_distance_matrix',
-                         weighted_unifrac_distance_matrix='weighted_unifrac_distance_matrix',
-                         jaccard_distance_matrix='jaccard_distance_matrix',
-                         bray_curtis_distance_matrix='bray_curtis_distance_matrix',
-                         unweighted_unifrac_pcoa_results='unweighted_unifrac_pcoa_results',
-                         weighted_unifrac_pcoa_results='weighted_unifrac_pcoa_results',
-                         jaccard_pcoa_results='jaccard_pcoa_results',
-                         bray_curtis_pcoa_results='bray_curtis_pcoa_results',
-                         unweighted_unifrac_emperor='unweighted_unifrac_emperor',
-                         weighted_unifrac_emperor='weighted_unifrac_emperor',
-                         jaccard_emperor='jaccard_emperor',
-                         bray_curtis_emperor='bray_curtis_emperor'))
-faith_pd_vec = core_metrics_results.faith_pd_vector
-evenness_vec = core_metrics_results.evenness_vector
-unweighted_unifrac_dm = core_metrics_results.unweighted_unifrac_distance_matrix
-unweighted_unifrac_pcoa = core_metrics_results.unweighted_unifrac_pcoa_results
-bray_curtis_pcoa=core_metrics_results.bray_curtis_pcoa_results
 :::
 
 Here we set the `--p-sampling-depth` parameter to ???.
@@ -387,25 +375,41 @@ The PCoA results that were used in `core-metrics-phylogeny` are also available, 
 
 :::{describe-usage}
 
-uu_pcoa_as_md = use.view_as_metadata('uu_pcoa_as_md', unweighted_unifrac_pcoa)
-faith_pd_as_md = use.view_as_metadata('faith_pd_as_md', faith_pd_vec)
-vizard_md = use.merge_metadata('vizard_md', sample_metadata, uu_pcoa_as_md, faith_pd_as_md)
+unweighted_pcoa_as_md = use.view_as_metadata('unweighted_pcoa_as_md', unweighted_pcoa)
+richness_as_md = use.view_as_metadata('richness_as_md', richness_vector)
+unweighted_vizard_md = use.merge_metadata('unweighted_vizard_md', sample_metadata, unweighted_pcoa_as_md, richness_as_md)
 
 use.action(
     use.UsageAction(plugin_id='vizard',
                     action_id='scatterplot_2d'),
-    use.UsageInputs(metadata=vizard_md),
-    use.UsageOutputNames(visualization='diversity_scatterplot'))
+    use.UsageInputs(metadata=unweighted_vizard_md),
+    use.UsageOutputNames(visualization='unweighted_diversity_scatterplot'))
+:::
+
+:::{describe-usage}
+
+weighted_pcoa_as_md = use.view_as_metadata('weighted_pcoa_as_md', weighted_pcoa)
+weighted_vizard_md = use.merge_metadata('weighted_vizard_md', sample_metadata, weighted_pcoa_as_md, richness_as_md)
+
+use.action(
+    use.UsageAction(plugin_id='vizard',
+                    action_id='scatterplot_2d'),
+    use.UsageInputs(metadata=weighted_vizard_md),
+    use.UsageOutputNames(visualization='weighted_diversity_scatterplot'))
 :::
 
 
-:::{tip} Question.
-Do the Emperor plots support the other beta diversity analyses we've performed here?
-(Hint: Experiment with coloring points by different metadata.)
-:::
 
-:::{tip} Question.
-What differences do you observe between the unweighted UniFrac and Bray-Curtis PCoA plots?
+:::{exercise} Interpreting ordination plots.
+When plotting PCoA axes 1 and 2 and coloring by SampleType, is the HEC more similar to the food compost or HE sample?
+
+What sample type is the Microbe Mix most similar to?
+The inside of the toilet pre-use?
+The bulking material?
+
+What other interesting relationships do you see when changing the x- and y-axes and sample coloring?
+
+Which sample has the lowest microbiome richness?
 :::
 
 ## Alpha rarefaction plotting
@@ -420,9 +424,8 @@ Average diversity values will be plotted for each sample at each even sampling d
 use.action(
     use.UsageAction(plugin_id='diversity',
                     action_id='alpha_rarefaction'),
-    use.UsageInputs(table=table_ms2,
-                    phylogeny=phylogeny,
-                    max_depth=250,
+    use.UsageInputs(table=kmer_table,
+                    max_depth=62000,
                     metadata=sample_metadata),
     use.UsageOutputNames(visualization='alpha_rarefaction'))
 :::
@@ -636,3 +639,5 @@ use.action(
 
 You might next want to try to adapt the commands presented in this tutorial to your own data, adjusting parameter settings and metadata column headers as is relevant.
 If you need help, head over to the [QIIME 2 Forum](https://forum.qiime2.org).
+
+
