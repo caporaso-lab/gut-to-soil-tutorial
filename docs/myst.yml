@@ -19,6 +19,7 @@ project:
   toc:
     - file: intro.md
     - file: gut-to-soil-16S-tutorial.md
+    - file: why.md
 
 site:
   template: https://github.com/ebolyen/myst-book-theme-poc.git
