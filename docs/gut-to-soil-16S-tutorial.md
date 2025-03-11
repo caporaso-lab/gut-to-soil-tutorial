@@ -225,14 +225,14 @@ You can do this using the following two commands, which will create visual summa
 The [`feature-table summarize` action](xref:_library-ext#q2-action-feature-table-summarize) command will give you information on how many sequences are associated with each sample and with each feature, histograms of those distributions, and some related summary statistics.
 
 :::{describe-usage}
-_, _, feature_frequencies = use.action(
+_, _, asv_frequencies = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='summarize_plus'),
     use.UsageInputs(table=asv_table,
                     metadata=sample_metadata),
     use.UsageOutputNames(summary='asv_table',
                          sample_frequencies='sample_frequencies',
-                         feature_frequencies='feature_frequencies'))
+                         feature_frequencies='asv_frequencies'))
 :::
 
 :::{exercise} Exploring the feature table summary -- part 1.
@@ -249,14 +249,14 @@ This visualization will be very useful later in the tutorial, when you want to l
 
 :::{describe-usage}
 
-feature_frequencies_as_md = use.view_as_metadata('feature_frequencies_md',
-                                                 feature_frequencies)
+asv_frequencies_as_md = use.view_as_metadata('asv_frequencies_md',
+                                                 asv_frequencies)
 
 use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='tabulate_seqs'),
     use.UsageInputs(data=asv_seqs,
-                    metadata=feature_frequencies_as_md),
+                    metadata=asv_frequencies_as_md),
     use.UsageOutputNames(visualization='asv_seqs'),
 )
 :::
@@ -319,14 +319,14 @@ How many total sequences did we lose?
 Here's the command you would use:
 
 :::{describe-usage}
-_, _, feature_frequencies_ms2 = use.action(
+_, _, asv_frequencies_ms2 = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='summarize_plus'),
     use.UsageInputs(table=asv_table_ms2,
                     metadata=sample_metadata),
     use.UsageOutputNames(summary='asv_table_ms2',
                          sample_frequencies='sample_frequencies_ms2',
-                         feature_frequencies='feature_frequencies_ms2'))
+                         feature_frequencies='asv_frequencies_ms2'))
 :::
 
 Be sure to run this as we're going to use one of the results below.
@@ -389,8 +389,8 @@ What was used as the DADA2 trim and trunc parameters for the data leading to thi
 
 :::{describe-usage}
 
-feature_frequencies_ms2_as_md = use.view_as_metadata('feature_frequencies',
-                                                     feature_frequencies_ms2)
+asv_frequencies_ms2_as_md = use.view_as_metadata('asv_frequencies',
+                                                     asv_frequencies_ms2)
 
 taxonomy_collection = use.construct_artifact_collection(
     'taxonomy_collection', {'Greengenes-13-8': taxonomy}
@@ -401,7 +401,7 @@ use.action(
                     action_id='tabulate_seqs'),
     use.UsageInputs(data=asv_seqs_ms2,
                     taxonomy=taxonomy_collection,
-                    metadata=feature_frequencies_ms2_as_md),
+                    metadata=asv_frequencies_ms2_as_md),
     use.UsageOutputNames(visualization='asv_seqs_ms2'),
 )
 :::
@@ -439,9 +439,18 @@ For those reasons, we're going to skip building phylogenetic trees and instead u
 
 ## Downstream data analysis
 
-### Diversity calculations
+As mentioned above, we tend to think of "downstream" analysis as beginning with a feature table, taxonomic annotation of our features, and optionally a phylogenetic tree.
+Now that we have those (with the exception of the tree, which we won't use here), let's jump in.
+This is where it starts to get fun!
 
-**Replace with q2-kmerizer and q2-boots?**
+### Kmerization of our features
+
+We'll start here by calculating alpha and beta diversity metrics.
+To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:_amplicon-docs-ext#term-stand-alone plugin), [q2-kmerizer](https://forum.qiime2.org/t/q2-kmerizer-a-qiime-2-plugin-for-k-mer-based-diversity-analysis/32592).
+This plugin splits ASV sequences into their constituent kmers, and creates a new feature table where those kmers (instead of ASVs) are the features.
+[The paper](https://doi.org/10.1128/msystems.01550-24) showed that this enables non-phylogenetic diversity metrics to achieve results highly correlated with those achieved by phylogenetic diversity metrics.
+
+Let's generate our kmer feature table.
 
 :::{describe-usage}
 kmer_table, = use.action(
@@ -453,35 +462,41 @@ kmer_table, = use.action(
 )
 :::
 
+Let's also generate a summary of the feature table.
+
 :::{describe-usage}
 use.action(
     use.UsageAction(plugin_id='feature_table',
-                    action_id='summarize'),
+                    action_id='summarize_plus'),
     use.UsageInputs(table=kmer_table,
                     sample_metadata=sample_metadata),
-    use.UsageOutputNames(visualization='kmer_table')
+    use.UsageOutputNames(visualization='kmer_table',
+                         sample_frequencies='sample_frequencies',
+                         feature_frequencies='kmer_frequencies')
 )
 :::
 
+:::{exercise}
+What is the median number of kmers associated with each sample?
+What is the most frequently occurring kmer in this table?
+How long are the kmers, and how could you change that if you wanted to?
+:::
 
+### Computing bootstrapped alpha and beta diversity metrics
 
-## Alpha and beta diversity analysis
+QIIME 2's diversity analyses are available through the [diversity plugin](xref:_library-ext#q2-plugin-diversity), which supports computing alpha and beta diversity metrics, applying related statistical tests, and generating interactive visualizations.
+A relatively new stand-alone plugin, [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots), mirrors the interface of the diversity metric calculation actions in the diversity plugin, but generates more robust results because it integrates rarefaction and/or bootstrapping.
+Let's use that here, instead of the diversity plugin.
 
-**Add note about q2-boots.**
-**Integrate some sample filtering, e.g., to just HE and HEC post-roll?**
-**Paired difference testing - pre- versus post-roll?**
-**Regress samples?**
+We'll apply the `core-metrics` action, which bootstraps a `FeatureTable[Frequency]` (i.e., samples with replacement) to a user-specified sampling depth `n` times, computes several alpha and beta diversity metrics on each of the `n` bootstrapped feature tables, and then creates averaged alpha and beta diversity data artifacts as output.
+Those resulting artifacts can be used anywhere that the corresponding artifacts from the diversity plugin could be used.
+The `core-metrics` action also generates principle coordinates analysis (PCoA) plots using [the Emperor plugin](xref:_library-ext#q2-plugin-emperor) for each of the beta diversity metrics.
 
-QIIME 2's diversity analyses are available through the `q2-diversity` plugin, which supports computing alpha and beta diversity metrics, applying related statistical tests, and generating interactive visualizations.
-We'll first apply the `core-metrics-phylogenetic` method, which rarefies a `FeatureTable[Frequency]` to a user-specified depth, computes several alpha and beta diversity metrics, and generates principle coordinates analysis (PCoA) plots using Emperor for each of the beta diversity metrics.
 The metrics computed by default are:
 -   Alpha diversity
     -   Shannon's diversity index (a quantitative measure of community
         richness)
     -   Observed Features (a qualitative measure of community richness)
-    -   Faith's Phylogenetic Diversity (a qualitative measure of
-        community richness that incorporates phylogenetic relationships
-        between the features)
     -   Evenness (or Pielou's Evenness; a measure of community
         evenness)
 -   Beta diversity
@@ -489,25 +504,29 @@ The metrics computed by default are:
         dissimilarity)
     -   Bray-Curtis distance (a quantitative measure of community
         dissimilarity)
-    -   unweighted UniFrac distance (a qualitative measure of community
-        dissimilarity that incorporates phylogenetic relationships
-        between the features)
-    -   weighted UniFrac distance (a quantitative measure of community
-        dissimilarity that incorporates phylogenetic relationships
-        between the features)
 
+::::{margin}
 :::{tip}
 You can find additional information on these and other metrics availability in QIIME 2 in [this excellent forum post by a QIIME 2 community member](https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282).
 When you're ready, we'd love to have your contributions on the Forum as well!
 :::
+::::
 
-An important parameter that needs to be provided to this script is `--p-sampling-depth`, which is the even sampling (i.e. rarefaction) depth.
-Because most diversity metrics are sensitive to different sampling depths across different samples, this script will randomly subsample the counts from each sample to the value provided for this parameter.
-For example, if you provide `--p-sampling-depth 500`, this step will subsample the counts in each sample without replacement so that each sample in the resulting table has a total count of 500.
-If the total count for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
+An important parameter that needs to be provided to this script is `sampling-depth`, which is the even sampling (i.e., bootstrapping or rarefaction) depth.
+Because most diversity metrics are sensitive to different sampling depths across different samples, the tables are randomly subsampled such that the total frequency for each sample is the user-specified sampling depth.
+For example, if you set `sampling-depth=500`, this step will subsample the counts in each sample so that each sample in the resulting table has a total frequency of 500.
+If the total frequency for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
 Choosing this value is tricky.
-We recommend making your choice by reviewing the information presented in the `table_ms2.qzv` file that was created above.
-Choose a value that is as high as possible (so you retain more sequences per sample) while excluding as few samples as possible.
+We recommend making your choice by reviewing the information presented in the `kmer-table.qzv` file that was created above.
+
+:::{exercise} Choosing a sampling depth.
+View the `kmer-table.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
+What value would you choose to pass for `sampling-depth`?
+How many samples will be excluded from your analysis based on this choice?
+How many total sequences will you be analyzing in the `core-metrics` command?
+:::
+
+I'm going to choose a values that is around the first quartile of the sample total frequencies.
 
 :::{describe-usage}
 core_metrics = use.action(
@@ -515,7 +534,7 @@ core_metrics = use.action(
                     action_id='core_metrics'),
     use.UsageInputs(table=kmer_table,
                     metadata=sample_metadata,
-                    sampling_depth=62000,
+                    sampling_depth=22000,
                     n=10,
                     replacement=True,
                     alpha_average_method='median',
@@ -544,31 +563,33 @@ evenness_vector = use.get_artifact_collection_member(
     'evenness_vector', core_metrics.alpha_diversities, 'evenness')
 :::
 
-:::{tip} Question.
-View the `table_ms2.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
-What value would you choose to pass for `--p-sampling-depth`?
-How many samples will be excluded from your analysis based on this choice?
-How many total sequences will you be analyzing in the `core-metrics-phylogenetic` command?
-:::
-
-Here we set the `--p-sampling-depth` parameter to ???.
-The three samples that have fewer sequences will be dropped from the `core-metrics-phylogenetic` analyses and anything that uses these results.
-
-::::{note}
+:::{note}
 In many Illumina runs you'll observe a few samples that have very low sequence counts.
 You will typically want to exclude those from the analysis by choosing a larger value for the sampling depth at this stage.
-::::
+:::
 
 After computing diversity metrics, we can begin to explore the microbial composition of the samples in the context of the sample metadata.
-This information is present in the [sample metadata](https://data.qiime2.org/2025.4/tutorials/gut-to-soil/sample_metadata) file that was downloaded earlier.
+You can review the sample metadata using one of the tabulated views of this file that [we created above](#sample-metadata-tabulate-viz).
 
-Finally, ordination is a popular approach for exploring microbial community composition in the context of sample metadata.
+:::{exercise}
+Open one of the Emperor plots that was generated by the previous command, and experiment with the options for coloring by metadata.
+Which of the metadata categories results in samples grouping most by color?
+:::
 
-**Vizard PCoA 1 and 2 versus time.**
-The PCoA results that were used in `core-metrics-phylogeny` are also available, making it easy to generate new PCoA-based visualizations.
+### Integrating additional information into PCoA scatter plots
+
+The PCoA results that were computed by `core-metrics` are viewable as metadata, which opens them up to use with [the vizard plugin](xref:_library-ext#q2-plugin-diversity).
+Vizard is a general purpose plotting plugin, and works with any artifacts that can be viewed as metadata.
+This opens up a world of possibility in how you visualize your microbiome data with QIIME 2.
+For example, let's integrate our Jaccard PCoA results with our Observed Features data and our sample metadata in a vizard scatterplot.
+
+::::{margin}
+:::{tip}
+When looking at the PCoA as metadata, the columns labels "Axis 1", "Axis 2", ... are the first, second, ... PCoA axes.
+:::
+::::
 
 :::{describe-usage}
-
 unweighted_pcoa_as_md = use.view_as_metadata('unweighted_pcoa_as_md', unweighted_pcoa)
 richness_as_md = use.view_as_metadata('richness_as_md', richness_vector)
 unweighted_vizard_md = use.merge_metadata('unweighted_vizard_md', sample_metadata, unweighted_pcoa_as_md, richness_as_md)
@@ -579,6 +600,13 @@ use.action(
     use.UsageInputs(metadata=unweighted_vizard_md),
     use.UsageOutputNames(visualization='unweighted_diversity_scatterplot'))
 :::
+
+:::{exercise} Richness scatterplot.
+Which sample types have the lowest richness?
+Does richness appear to be correlated with any of the PCoA axes?
+:::
+
+Let's generate another vizard plot, but this time using our Bray-Curtis PCoA results.
 
 :::{describe-usage}
 
@@ -592,10 +620,8 @@ use.action(
     use.UsageOutputNames(visualization='weighted_diversity_scatterplot'))
 :::
 
-
-
 :::{exercise} Interpreting ordination plots.
-When plotting PCoA axes 1 and 2 and coloring by SampleType, is the HEC more similar to the food compost or HE sample?
+When plotting PCoA axes 1 and 2 and coloring by SampleType, is the HEC more similar to the food compost or HE samples?
 
 What sample type is the Microbe Mix most similar to?
 The inside of the toilet pre-use?
@@ -606,13 +632,16 @@ What other interesting relationships do you see when changing the x- and y-axes 
 Which sample has the lowest microbiome richness?
 :::
 
-## Alpha rarefaction plotting
+### Alpha rarefaction plotting
 
-In this section we'll explore alpha diversity as a function of sampling depth using the `qiime diversity alpha-rarefaction` visualizer.
-This visualizer computes one or more alpha diversity metrics at multiple sampling depths, in steps between 1 (optionally controlled with `--p-min-depth`) and the value provided as `--p-max-depth`.
+In this section we'll explore alpha diversity as a function of sampling depth using the `qiime diversity alpha-rarefaction`[`alpha-rarefaction` action](xref:_library-ext#q2-action-diversity-alpha-rarefaction).
+This visualizer computes one or more alpha diversity metrics at multiple sampling depths, in steps between 1 (optionally controlled with `min-depth`) and the value provided as `max-depth`.
 At each sampling depth step, 10 rarefied tables will be generated, and the diversity metrics will be computed for all samples in the tables.
-The number of iterations (rarefied tables computed at each sampling depth) can be controlled with `--p-iterations`.
-Average diversity values will be plotted for each sample at each even sampling depth, and samples can be grouped based on metadata in the resulting visualization if sample metadata is provided with the `--m-metadata-file` parameter.
+The number of iterations (rarefied tables computed at each sampling depth) can be controlled with the `iterations` parameter.
+Average diversity values will be plotted for each sample at each even sampling depth, and samples can be grouped based on metadata in the resulting visualization if sample metadata is provided.
+
+The value that you provide for `max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `kmer-table.qzv` file.
+In general, choosing a value that is somewhere around the median frequency seems to work well, but you may want to increase that value if the lines in the resulting rarefaction plot don't appear to be leveling out, or decrease that value if you seem to be losing many of your samples due to low total frequencies closer to the minimum sampling depth than the maximum sampling depth.
 
 :::{describe-usage}
 use.action(
@@ -627,7 +656,7 @@ use.action(
 The visualization will have two plots.
 The top plot is an alpha rarefaction plot, and is primarily used to determine if the richness of the samples has been fully observed or sequenced.
 If the lines in the plot appear to "level out" (i.e., approach a slope of zero) at some sampling depth along the x-axis, that suggests that collecting additional sequences beyond that sampling depth would not be likely to result in the observation of additional features.
-If the lines in a plot don't level out, this may be because the richness of the samples hasn't been fully observed yet (because too few sequences were collected), or it could be an indicator that a lot of sequencing error remains in the data (which is being mistaken for novel diversity).
+If the lines in the plot don't level out, this may be because the richness of the samples hasn't been fully observed yet (because too few sequences were collected), or it could be an indicator that a lot of sequencing error remains in the data (which is being mistaken for novel diversity).
 
 The bottom plot in this visualization is important when grouping samples by metadata.
 It illustrates the number of samples that remain in each group when the feature table is rarefied to each sampling depth.
@@ -635,25 +664,11 @@ If a given sampling depth `d` is larger than the total frequency of a sample `s`
 If many of the samples in a group have lower total frequencies than `d`, the average diversity presented for that group at `d` in the top plot will be unreliable because it will have been computed on relatively few samples.
 When grouping samples by metadata, it is therefore essential to look at the bottom plot to ensure that the data presented in the top plot is reliable.
 
-::::{note}
-
-The value that you provide for `--p-max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `table_ms2.qzv` file that was created above.
-In general, choosing a value that is somewhere around the median frequency seems to work well, but you may want to increase that value if the lines in the resulting rarefaction plot don't appear to be leveling out, or decrease that value if you seem to be losing many of your samples due to low total frequencies closer to the minimum sampling depth than the maximum sampling depth.
-::::
-
-:::{tip} Question.
-When grouping samples by "body-site" and viewing the alpha rarefaction plot for the "observed_features" metric, which body sites (if any) appear to exhibit sufficient diversity coverage (i.e., their rarefaction curves level off)?
-How many sequence variants appear to be present in those body sites?
+:::{exercise} Relative richness.
+When grouping samples by "SampleType" and viewing the alpha rarefaction plot for the "observed_features" metric, which sample types (if any) appear to exhibit sufficient diversity coverage (i.e., their rarefaction curves level out)?
 :::
 
-:::{tip} Question.
-When grouping samples by "body-site" and viewing the alpha rarefaction plot for the "observed_features" metric, the line for the "right palm" samples appears to level out at about 40, but then jumps to about 140.
-What do you think is happening here?
-(Hint: be sure to look at both the top and bottom plots.)
-:::
-
-## Taxonomic analysis
-
+### Taxonomic analysis
 
 Next, we can view the taxonomic composition of our samples with interactive bar plots.
 Generate those plots with the following command and then open the visualization.
@@ -680,107 +695,85 @@ We use the ASV table here because the feature ids in that table are the same as 
 Additionally, kmerization of our data is a tool used for computing diversity metrics - not something we generally intend to use throughout our analyses.
 :::
 
-:::{tip} Question.
-Visualize the samples at *Level 2* (which corresponds to the phylum level in this analysis), and then sort the samples by `body-site`, then by `subject`, and then by `days-since-experiment-start`.
-What are the dominant phyla in each in `body-site`? Do you observe any consistent change across the two subjects between `days-since-experiment-start` `0` and the later timepoints?
+:::{exercise} Taxa bar plots.
+Visualize the samples at *Level 2* (which corresponds to the phylum level in this analysis), and then sort the samples by `SampleType`.
+What are the dominant phyla in each in `SampleType`?
 :::
 
-<!--
-## Differential abundance testing with ANCOM-BC
+### Differential abundance testing with ANCOM-BC
 
-ANCOM-BC can be applied to identify features that are differentially abundant (i.e. present in different abundances) across sample groups.
-As with any bioinformatics method, you should be aware of the assumptions and limitations of ANCOM-BC before using it.
-We recommend reviewing the [ANCOM-BC paper](https://pubmed.ncbi.nlm.nih.gov/32665548/) before using this method.
+[ANCOM-BC](https://doi.org/10.1038/s41467-020-17041-7) is a compositionally-aware linear regression model that allows testing for differentially abundant features across sample groups while also implementing bias correction.
+This can be accessed using the [`ancombc` action](xref:_library-ext#q2-action-composition-ancombc) in the [composition plugin](xref:_library-ext#q2-plugin-composition).
 
-::::{note}
+::::{margin}
+:::{tip} Differential abundance testing is hard.
 Accurately identifying features that are differentially abundant across sample types in microbiome data is a challenging problem and an open area of research.
-There is one QIIME 2 plugin that can be used for this: `q2-composition` (used in this section).
-In addition to the methods contained in this plugin, new approaches for differential abundance testing are regularly introduced, and it's worth assessing the current state of the field when performing differential abundance testing to see if there are new methods that might be useful for your data.
+In addition to the methods contained in the composition plugin, new approaches for differential abundance testing are regularly introduced.
+It's worth assessing the current state of the field when performing differential abundance testing to see if there are new methods that might be useful for your data.
+:::
 ::::
 
-ANCOM-BC is a compositionally-aware linear regression model that allows for testing differentially abundant features across groups while also implementing bias correction, and is currently implemented in the `q2-composition` plugin.
-
-Because we expect a lot of features to change in abundance across body sites, in this tutorial we'll filter our full feature table to only contain gut samples.
-We'll then apply ANCOM-BC to determine which, if any, sequence variants and genera are differentially abundant across the gut samples of our two subjects.
-
-We'll start by creating a feature table that contains only the gut samples.
-(To learn more about filtering, see the `Filtering Data <filtering>`{.interpreted-text role="doc"} tutorial.)
+We'll perform this analysis in a few steps.
+First, we'll filter our samples from our feature table such that we only have the three groups that we have the most samples for.
 
 :::{describe-usage}
 
-gut_table, = use.action(
+asv_table_ms2_dominant_sample_types, = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='filter_samples'),
-    use.UsageInputs(table=table,
+    use.UsageInputs(table=asv_table_ms2,
                     metadata=sample_metadata,
-                    where='[body-site]="gut"'),
-    use.UsageOutputNames(filtered_table='gut_table'))
+                    where='[SampleType] IN ("Human Excrement Compost", "Human Excrement", "Food Compost")'),
+    use.UsageOutputNames(filtered_table='asv_table_ms2_dominant_sample_types'))
 :::
 
-ANCOM-BC operates on a `FeatureTable[Frequency]` QIIME 2 artifact.
-We can run ANCOM-BC on the subject column to determine what features differ in abundance across gut samples of the two subjects.
+Then, we'll collapse our ASVs into genera (i.e. level 6 of the Greengenes taxonomy), to get more useful annotation of the features (and to learn how to perform this grouping).
 
 :::{describe-usage}
-
-ancombc_subject, = use.action(
-    use.UsageAction(plugin_id='composition',
-                    action_id='ancombc'),
-    use.UsageInputs(table=gut_table,
-                    metadata=sample_metadata,
-                    formula='subject'),
-    use.UsageOutputNames(differentials='ancombc_subject'))
-
-use.action(
-    use.UsageAction(plugin_id='composition',
-                    action_id='da_barplot'),
-    use.UsageInputs(data=ancombc_subject,
-                    significance_threshold=0.001),
-    use.UsageOutputNames(visualization='da_barplot_subject'))
-:::
-
-:::{tip} Question.
-1. Which ASV is most enriched, relative to the reference?
-   Which is most depleted?
-2. What would you expect to change if the `reference-level` was changed from `subject-1` (the default) to `subject-2`?
-:::
-
-We're also often interested in performing a differential abundance test at a specific taxonomic level.
-To do this, we can collapse the features in our `FeatureTable[Frequency]` at the taxonomic level of interest, and then re-run the above steps.
-In this tutorial, we collapse our feature table at the genus level (i.e. level 6 of the Greengenes taxonomy).
-
-:::{describe-usage}
-l6_gut_table, = use.action(
+genus_table_ms2_dominant_sample_types, = use.action(
     use.UsageAction(plugin_id='taxa',
                     action_id='collapse'),
-    use.UsageInputs(table=gut_table,
+    use.UsageInputs(table=asv_table_ms2_dominant_sample_types,
                     taxonomy=taxonomy,
                     level=6),
-    use.UsageOutputNames(collapsed_table='gut_table_l6'))
+    use.UsageOutputNames(collapsed_table='genus_table_ms2_dominant_sample_types'))
+:::
 
-l6_ancombc_subject, = use.action(
+Then, we'll apply ANCOM-BC to see which genera are differentially abundant across those sample types.
+I specify a reference level here as this defines what each group is compared against.
+Since the focus of this study is HEC, I choose that as my reference level.
+That will let us see what genera are over or under represented in the Human Excrement Compost samples relative to the other two sample groups.
+
+:::{describe-usage}
+genus_ancombc, = use.action(
     use.UsageAction(plugin_id='composition',
                     action_id='ancombc'),
-    use.UsageInputs(table=l6_gut_table,
+    use.UsageInputs(table=genus_table_ms2_dominant_sample_types,
                     metadata=sample_metadata,
-                    formula='subject'),
-    use.UsageOutputNames(differentials='l6_ancombc_subject'))
+                    formula='SampleType',
+                    #reference_levels='SampleType::Human Excrement Compost'
+                    ),
+    use.UsageOutputNames(differentials='genus_ancombc'))
+:::
 
+Finally, we'll visualize the results.
+
+:::{describe-usage}
 use.action(
     use.UsageAction(plugin_id='composition',
                     action_id='da_barplot'),
-    use.UsageInputs(data=l6_ancombc_subject,
+    use.UsageInputs(data=genus_ancombc,
                     significance_threshold=0.001),
-    use.UsageOutputNames(visualization='l6_da_barplot_subject'))
+    use.UsageOutputNames(visualization='genus_ancombc'))
 :::
 
-:::{tip} Question.
-1. Which genus is most enriched?
-   Which is most depleted?
-2. Do we see more differentially abundant features in the `da-barplot-subject.qzv` visualization, or in the `l6-da-barplot-subject.qzv` visualization?
-   Why might you expect this?
-:::
+:::{exercise}
+Which genus is most enriched in HEC relative to Food Compost?
+Which genus is most enriched in HEC relative to Human Excrement?
 
--->
+Which genus is most depleted in HEC relative to Food Compost?
+Which genus is most depleted in HEC relative to Human Excrement?
+:::
 
 ## Replay provenance
 
