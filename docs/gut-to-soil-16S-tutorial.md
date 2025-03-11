@@ -3,8 +3,6 @@
 
 :::{warning}
 This document is a work in progress as of 8 March 2025.
-As of this time, it's **not ready for use**, and only live for testing purposes.
-
 Commands/urls/text may be unreliable while in development.
 🚜
 :::
@@ -19,7 +17,7 @@ The conda environment file used to create the deployment where the commands in t
 In this tutorial you'll learn an end-to-end microbiome marker gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
 The full data set for the paper can be found in [the paper's Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
-In the final step, you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
+In the final step (**not yet written, as of 11 March 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
 
 The data used in this tutorial was generated using the [Earth Microbiome Project protocol](https://doi.org/10.1038/ismej.2012.8).
 Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified using the F515-R806 primers - a broad-coverage primer pair for Bacteria that also amplifies some Archaea.
@@ -751,8 +749,7 @@ genus_ancombc, = use.action(
     use.UsageInputs(table=genus_table_ms2_dominant_sample_types,
                     metadata=sample_metadata,
                     formula='SampleType',
-                    #reference_levels='SampleType::Human Excrement Compost'
-                    ),
+                    reference_levels=['SampleType::Human Excrement Compost']),
     use.UsageOutputNames(differentials='genus_ancombc'))
 :::
 
@@ -775,11 +772,37 @@ Which genus is most depleted in HEC relative to Food Compost?
 Which genus is most depleted in HEC relative to Human Excrement?
 :::
 
-## Replay provenance
+### That's it for now, but more is coming soon!
 
-**Update this section!**
+In the near future we plan to integrate analyses using the [sample-classifier plugin](xref:_library-ext#q2-plugin-sample-classifier) and [longitudinal plugin](xref:_library-ext#q2-plugin-longitudinal).
+In the mean time, you can refer to the documentation of those plugins and what you learned here to try a few things.
+1. Build a machine learning classifier that classifies samples accordining to the three dominant sample types in the feature table that we used with ANCOM-BC.
+ (Hint: see [`classify-samples`](xref:_library-ext#q2-action-sample-classifier-classify-samples).)
+1. Perform a longitudinal analysis that tracks samples from different buckets over time. Which taxa change most over time? (Hint: see [`feature-volatility`](xref:_library-ext#q2-action-longitudinal-feature-volatility).)
+
+We're also in the process of refactoring our statistical methods for assessing alpha and beta diversity across groups, using the new [stats plugin](xref:_library-ext#q2-plugin-stats).
+We're therefore holding off on integrating statistical analysis until we have that ready.
+In the meantime, you can refer to you can refer to the [](xref:_amplicon-docs-ext#moving-pictures-tutorial), as well as the [sample-classifier](https://docs.qiime2.org/2024.10/tutorials/sample-classifier/) and [longitudinal](https://docs.qiime2.org/2024.10/tutorials/longitudinal/) tutorials.
+
+## Replay provenance (work in progress!)
+
+:::{warning}
+This section is a work in progress as of 11 March 2025.
+Right now it's only replaying provenance from a single visualization, but this will be expanded to reflect the full analysis.
+Also, note that all commands for training the feature classifier are included here.
+More on this coming soon!
+:::
 
 You might next want to try to adapt the commands presented in this tutorial to your own data, adjusting parameter settings and metadata column headers as is relevant.
+QIIME 2's provenance replay functionality can help with this.
+Assuming that you ran all of the steps above in a directory called `gut-to-soil/`, run the following command to generate a template script that you can adapt for your workflow:
+
+```shell
+qiime tools replay-provenance \
+  --in-fp gut-to-soil/taxa-bar-plots.qzv \
+  --out-fp g2s-replayed.bash
+```
+
 If you need help, head over to the [QIIME 2 Forum](https://forum.qiime2.org).
 
 
