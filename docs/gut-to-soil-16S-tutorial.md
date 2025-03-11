@@ -122,7 +122,7 @@ What is the median quality score at position 200 of the forward reads?
 Generally, the term "upstream" is used to refer to data analysis pre-feature-asv_table, and "downstream" is used to refer to data analysis post-feature-asv_table.
 Let's jump into our upstream analysis.
 
-### Sequence quality control and feature asv_table construction
+### Sequence quality control and feature table construction
 
 QIIME 2 plugins are available for several quality control methods, including [DADA2](https://doi.org/10.1038/nmeth.3869), [Deblur](https://doi.org/10.1128/msystems.00191-16), and [basic quality-score-based filtering](https://doi.org/10.1038/nmeth.2276).
 In this tutorial we present this step using [DADA2](https://www.ncbi.nlm.nih.gov/pubmed/27214047).
@@ -420,6 +420,7 @@ How similar are the assignments?
 If they're dissimilar, at what *taxonomic level* do they begin to differ (e.g., species, genus, family, ...)?
 :::
 
+(phylogenetic-tree-building)=
 ### Building a tree for phylogenetic diversity calculations
 
 QIIME supports several phylogenetic diversity metrics, including Faith's Phylogenetic Diversity and weighted and unweighted UniFrac.
@@ -438,13 +439,13 @@ For those reasons, we're going to skip building phylogenetic trees and instead u
 ## Downstream data analysis
 
 As mentioned above, we tend to think of "downstream" analysis as beginning with a feature table, taxonomic annotation of our features, and optionally a phylogenetic tree.
-Now that we have those (with the exception of the tree, which we won't use here), let's jump in.
-This is where it starts to get fun!
+Now that we have those (with the exception of the tree, [which we won't use here](#phylogenetic-tree-building)), let's jump in.
+This is where it starts to get fun! ⛷️
 
 ### Kmerization of our features
 
 We'll start here by calculating alpha and beta diversity metrics.
-To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:_amplicon-docs-ext#term-stand-alone plugin), [q2-kmerizer](https://forum.qiime2.org/t/q2-kmerizer-a-qiime-2-plugin-for-k-mer-based-diversity-analysis/32592).
+To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:_amplicon-docs-ext#term-stand-alone-plugin), [q2-kmerizer](https://forum.qiime2.org/t/q2-kmerizer-a-qiime-2-plugin-for-k-mer-based-diversity-analysis/32592).
 This plugin splits ASV sequences into their constituent kmers, and creates a new feature table where those kmers (instead of ASVs) are the features.
 [The paper](https://doi.org/10.1128/msystems.01550-24) showed that this enables non-phylogenetic diversity metrics to achieve results highly correlated with those achieved by phylogenetic diversity metrics.
 
@@ -468,7 +469,7 @@ use.action(
                     action_id='summarize_plus'),
     use.UsageInputs(table=kmer_table,
                     sample_metadata=sample_metadata),
-    use.UsageOutputNames(visualization='kmer_table',
+    use.UsageOutputNames(summary='kmer_table',
                          sample_frequencies='sample_frequencies',
                          feature_frequencies='kmer_frequencies')
 )
@@ -524,7 +525,7 @@ How many samples will be excluded from your analysis based on this choice?
 How many total sequences will you be analyzing in the `core-metrics` command?
 :::
 
-I'm going to choose a values that is around the first quartile of the sample total frequencies.
+I'm going to choose values that is around the first quartile of the sample total frequencies.
 
 :::{describe-usage}
 core_metrics = use.action(
@@ -704,14 +705,19 @@ What are the dominant phyla in each in `SampleType`?
 This can be accessed using the [`ancombc` action](xref:_library-ext#q2-action-composition-ancombc) in the [composition plugin](xref:_library-ext#q2-plugin-composition).
 
 ::::{margin}
-:::{tip} Differential abundance testing is hard.
-Accurately identifying features that are differentially abundant across sample types in microbiome data is a challenging problem and an open area of research.
-In addition to the methods contained in the composition plugin, new approaches for differential abundance testing are regularly introduced.
+:::{warning} Differential abundance testing is easy to get wrong! ☠️
+Accurately identifying individual features that are differentially abundant across sample types in microbiome data is a challenging problem and an open area of research, particularly if you don't have an *a priori* hypothesis about which feature(s) are differentially abundant.
+A q-value that suggests that you've identified a feature that is differentially abundant across sample groups should be considered a hypothesis, not a conclusion, and you need new samples to test that new hypothesis.
+
+In addition to the methods contained in the [composition plugin](xref:_library-ext#q2-plugin-composition), new approaches for differential abundance testing are regularly introduced.
 It's worth assessing the current state of the field when performing differential abundance testing to see if there are new methods that might be useful for your data.
+If in doubt, consult a statistician.
 :::
 ::::
 
 We'll perform this analysis in a few steps.
+
+#### Filter samples from the feature table
 First, we'll filter our samples from our feature table such that we only have the three groups that we have the most samples for.
 
 :::{describe-usage}
@@ -725,6 +731,7 @@ asv_table_ms2_dominant_sample_types, = use.action(
     use.UsageOutputNames(filtered_table='asv_table_ms2_dominant_sample_types'))
 :::
 
+#### Collapse the ASVs into genera
 Then, we'll collapse our ASVs into genera (i.e. level 6 of the Greengenes taxonomy), to get more useful annotation of the features (and to learn how to perform this grouping).
 
 :::{describe-usage}
@@ -737,6 +744,7 @@ genus_table_ms2_dominant_sample_types, = use.action(
     use.UsageOutputNames(collapsed_table='genus_table_ms2_dominant_sample_types'))
 :::
 
+#### Apply differential abundance testing
 Then, we'll apply ANCOM-BC to see which genera are differentially abundant across those sample types.
 I specify a reference level here as this defines what each group is compared against.
 Since the focus of this study is HEC, I choose that as my reference level.
@@ -772,13 +780,15 @@ Which genus is most depleted in HEC relative to Food Compost?
 Which genus is most depleted in HEC relative to Human Excrement?
 :::
 
-### That's it for now, but more is coming soon!
+## That's it for now, but more is coming soon!
 
-In the near future we plan to integrate analyses using the [sample-classifier plugin](xref:_library-ext#q2-plugin-sample-classifier) and [longitudinal plugin](xref:_library-ext#q2-plugin-longitudinal).
-In the mean time, you can refer to the documentation of those plugins and what you learned here to try a few things.
+In the near future (as of 11 March 2025) we plan to integrate analyses using the [sample-classifier plugin](xref:_library-ext#q2-plugin-sample-classifier) and [longitudinal plugin](xref:_library-ext#q2-plugin-longitudinal).
+In the meantime, here are some suggestions to continue your learning:
 1. Build a machine learning classifier that classifies samples accordining to the three dominant sample types in the feature table that we used with ANCOM-BC.
  (Hint: see [`classify-samples`](xref:_library-ext#q2-action-sample-classifier-classify-samples).)
 1. Perform a longitudinal analysis that tracks samples from different buckets over time. Which taxa change most over time? (Hint: see [`feature-volatility`](xref:_library-ext#q2-action-longitudinal-feature-volatility).)
+1. Remember that the full data set (five sequencing runs) are available in the [gut-to-soil Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
+ Grab one of the larger sequencing runs (we worked with a small sequencing run that was generated as a preliminary test), and adapt the commands in this tutorial to work on a bigger data set.
 
 We're also in the process of refactoring our statistical methods for assessing alpha and beta diversity across groups, using the new [stats plugin](xref:_library-ext#q2-plugin-stats).
 We're therefore holding off on integrating statistical analysis until we have that ready.
@@ -788,8 +798,8 @@ In the meantime, you can refer to you can refer to the [](xref:_amplicon-docs-ex
 
 :::{warning}
 This section is a work in progress as of 11 March 2025.
-Right now it's only replaying provenance from a single visualization, but this will be expanded to reflect the full analysis.
-Also, note that all commands for training the feature classifier are included here.
+Right now this section only demonstrates replaying provenance from a single visualization, but this will be expanded to reflect the full analysis.
+Also, note that all commands for training the feature classifier are included in the resulting replay script (in case there are some commands in there that you don't remember running).
 More on this coming soon!
 :::
 
@@ -808,4 +818,4 @@ If you need help, head over to the [QIIME 2 Forum](https://forum.qiime2.org).
 
 [^build-requirements-exceed-resources]: The resource requirements exceed those provided by the [*Read the Docs* (RTD) build system](https://docs.readthedocs.com/platform/stable/builds.html#build-resources), which is used to build the documentation that you're reading.
  RTD provides systems with 7GB of RAM for 30 minutes maximum to build documentation.
- That's a very reasonable (and generous) allocation for building documentation, so we choose to work within those contraints rather than creating our own build system like we've had in the past (e.g., for `https://docs.qiime2.org`).
+ That's a very reasonable (and generous) allocation for building documentation, so we choose to work within those contraints rather than creating our own documentation build system like we've had in the past (e.g., for `https://docs.qiime2.org`).
