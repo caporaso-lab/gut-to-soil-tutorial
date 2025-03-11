@@ -3,7 +3,7 @@
 :::{tip} Other resources are a better starting point for learning QIIME 2
 :label: reference-to-amplicon-docs
 If you're new to QIIME 2, the best place to get started is the QIIME 2 *amplicon distribution* documentation.
-You can find that here: [](xref:amplicon-docs/).
+You can find that here: [](xref:_amplicon-docs-ext/).
 Otherwise, read on...
 :::
 

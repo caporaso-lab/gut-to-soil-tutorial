@@ -16,7 +16,7 @@ The conda environment file used to create the deployment where the commands in t
 
 ## Background
 
-In this tutorial you'll learn an end-to-end microbiome data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
+In this tutorial you'll learn an end-to-end microbiome marker gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
 The full data set for the paper can be found in [the paper's Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
 In the final step, you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
@@ -33,9 +33,14 @@ Before starting the analysis, explore the sample metadata to familiarize yoursel
 The following command will download the sample metadata as tab-separated text and save it in the file `sample-metadata.tsv`.
 This `sample-metadata.tsv` file is used throughout the rest of the tutorial.
 
+::::{margin}
 :::{tip}
 To learn more about metadata in QIIME 2, including how it should be formatted, refer to [*Using QIIME 2*'s Metadata file format](https://use.qiime2.org/en/latest/references/metadata.html).
+
+To learn more about metadata standards, you can refer to [Chloe Herman's video on this topic](https://www.youtube.com/watch?v=erklD1bofzE), which was developed in collaboration with the [National Microbiome Data Collaborative (NMDC)](https://microbiomedata.org/).
+
 :::
+::::
 
 :::{describe-usage}
 :scope: gut-to-soil
@@ -45,29 +50,45 @@ sample_metadata = use.init_metadata_from_url(
    'https://www.dropbox.com/scl/fi/irosimbb1aud1aa7frzxf/sample-metadata.tsv?rlkey=f45jpxzajjz9xx9vpvfnf1zjx&st=nahafuvy&dl=1')
 :::
 
-QIIME 2's metadata plugin provides a Visualizer called `tabulate` that generates a convenient view of a sample metadata file.
-To learn more about `metadata tabulate`, you can find it in the plugin reference [here](../plugin-reference/plugins/metadata/3-tabulate).
+QIIME 2's [metadata plugin](xref:_library-ext#q2-plugin-metadata) provides a [Visualizer called `tabulate`](xref:_library-ext#q2-action-metadata-tabulate) that generates a convenient view of a sample metadata file.
 Let's run this, and then we'll look at the result.
 Here's the first QIIME 2 command that you should run in this tutorial:
 
+(sample-metadata-tabulate-viz)=
 :::{describe-usage}
-sample_metadata_viz, = use.action(
+use.action(
   use.UsageAction(plugin_id='metadata',
                   action_id='tabulate'),
   use.UsageInputs(input=sample_metadata),
-  use.UsageOutputNames(visualization='sample_metadata_viz')
+  use.UsageOutputNames(visualization='sample_metadata')
 )
 :::
 
-This will generate a QIIME 2 Visualization.
+::::{margin}
+:::{tip}
+You can learn more about viewing Visualizations, including alternatives to QIIME 2 View if you can't use that for any reason, [in *Using QIIME 2*](https://use.qiime2.org/en/latest/how-to-guides/view-visualizations.html).
+:::
+::::
+
+This will generate a QIIME 2 [Visualization](xref:_amplicon-docs-ext#term-visualization).
 Visualizations can be viewed by loading them with [QIIME 2 View](https://view.qiime2.org).
 Navigate to QIIME 2 View, and drag and drop the visualization that was created to view it.
-(You can learn more about viewing Visualizations, including alternatives to QIIME 2 View if you can't use that for any reason, [here](https://use.qiime2.org/en/latest/how-to-guides/view-visualizations.html).)
 
 ## Access already-imported QIIME 2 data
 
-You should ask your sequencing center to provide data already in QIIME 2 "demux" artifacts, or provide a QIIME 2 fastq manifest file for your sequencing data.
+This tutorial begins with paired-end read sequencing data that has already been demultiplexed and imported into a QIIME 2 Artifact.
+Because sequence data can be delivered to you in many different forms, it's not possible to cover the varieties here.
+Instead we refer you to [](xref:_amplicon-docs-ext#how-to-import-export) to learn how to import your data.
+If you want to learn why importing is necessary, refer to [](xref:_amplicon-docs-ext#import-explanation).
+
+::::{margin}
+:::{tip}
+You should ask your sequencing center to provide data already demultiplexed.
+In some cases, they may be able to provide a "QIIME 2 demux artifacts".
+If not, ask them to provide a [fastq manifest file](xref:_amplicon-docs-ext#import-fastq-manifest) for your sequencing data.
 It should be easy for them to generate.
+:::
+::::
 
 :::{describe-usage}
 :scope: gut-to-soil
@@ -77,18 +98,12 @@ demux = use.init_artifact_from_url(
    'https://www.dropbox.com/scl/fi/73f6rmcq7lelug5qbuhl6/demux-10p.qza?rlkey=s0hoh326fes3z2usvgs62tv3c&st=caz1avkn&dl=1')
 :::
 
-:::{tip}
-Links are included to view and download precomputed QIIME 2 artifacts and visualizations created by commands in the documentation.
-For example, the command above created a single `emp-single-end-sequences.qza` file and that file is precomputed and linked following the command.
-These are provided so that you can look at Visualizations before you run them, to get a feeling for whether QIIME 2 is going to do what you need before taking the time to install and run QIIME 2.
-The linked Artifacts (i.e., `.qza` files) are useful as you branch out and start using other QIIME 2 functionality as they provide example files that you can use to test other commands.
-:::
+## Summarize demultiplexed sequences
 
-## Summarizing demultiplexed sequences
-
-After demultiplexing, it's useful to generate a summary of the demultiplexing results.
+When you have demultiplexed sequence data, the next step is typically to generate a visual summary of it.
 This allows you to determine how many sequences were obtained per sample, and also to get a summary of the distribution of sequence qualities at each position in your sequence data.
 
+(demux-summary-viz)=
 :::{describe-usage}
 
 use.action(
@@ -98,42 +113,54 @@ use.action(
     use.UsageOutputNames(visualization='demux'))
 :::
 
-:::{note}
-All QIIME 2 visualizers (i.e., commands that take a `--o-visualization` parameter) will generate a Visualization (i.e., a`.qzv` file).
-As discussed above, Visualizations can be viewed by loading them with [QIIME 2 View](https://view.qiime2.org) or using one of the alternative mechanisms discussed [here](https://use.qiime2.org/en/latest/how-to-guides/view-visualizations.html).
-When you see instructions to *view a visualization*, you should use one of the approaches on the `.qzv` file that we're referring to.
-Navigate to QIIME 2 View, and drag and drop the visualization that was created to view it.
-(You can learn more about viewing Visualizations, including alternatives to QIIME 2 View if you can't use that for any reason, .)
+:::{exercise} Exploring the "demux summary".
+How many samples are represented in this sequencing data?
+What is the median number of sequence reads obtained per sample?
+What is the median quality score at position 200 of the forward reads?
 :::
 
-## Sequence quality control and feature table construction
+## Upstream data analysis
 
-QIIME 2 plugins are available for several quality control methods, including [DADA2](https://www.ncbi.nlm.nih.gov/pubmed/27214047), [Deblur](http://msystems.asm.org/content/2/2/e00191-16), and [basic quality-score-based filtering](http://www.nature.com/nmeth/journal/v10/n1/abs/nmeth.2276.html).
+Generally, the term "upstream" is used to refer to data analysis pre-feature-asv_table, and "downstream" is used to refer to data analysis post-feature-asv_table.
+Let's jump into our upstream analysis.
+
+### Sequence quality control and feature asv_table construction
+
+QIIME 2 plugins are available for several quality control methods, including [DADA2](https://doi.org/10.1038/nmeth.3869), [Deblur](https://doi.org/10.1128/msystems.00191-16), and [basic quality-score-based filtering](https://doi.org/10.1038/nmeth.2276).
 In this tutorial we present this step using [DADA2](https://www.ncbi.nlm.nih.gov/pubmed/27214047).
-The result of this method will be a `FeatureTable[Frequency]` QIIME 2 artifact, which contains counts (frequencies) of each unique sequence in each sample in the dataset, and a `FeatureData[Sequence]` QIIME 2 artifact, which maps feature identifiers in the `FeatureTable` to the sequences they represent.
+The result of this method will be a `Featureasv_table[Frequency]` QIIME 2 artifact, which contains counts (frequencies) of each unique sequence in each sample in the dataset, and a `FeatureData[Sequence]` QIIME 2 artifact, which maps feature identifiers in the `FeatureTable` to the sequences they represent.
 
-[DADA2](https://www.ncbi.nlm.nih.gov/pubmed/27214047) is a pipeline for detecting and correcting (where possible) Illumina amplicon sequence data.
-As implemented in the `q2-dada2` plugin, this quality control process will additionally filter any phiX reads (commonly present in marker gene Illumina sequence data) that are identified in the sequencing data, and will filter chimeric sequences.
+DADA2 is a pipeline for detecting and correcting (where possible) Illumina amplicon sequence data.
+As implemented in the [dada2 plugin](xref:_library-ext#q2-plugin-dada2), this quality control process will additionally filter any phiX reads (commonly present in marker gene Illumina sequence data) that are identified in the sequencing data, filter chimeric sequences, and merge paired end reads.
 
-The `dada2 denoise-paired` method requires four parameters that are used in quality filtering:
-- `--p-trim-left-f a`, which trims off the first `a` bases of each forward read
-- `--p-trunc-len-f b` which truncates each forward read at position `b`
-- `--p-trim-left-r c`, which trims off the first `c` bases of each forward read
-- `--p-trunc-len-r d` which truncates each forward read at position `d`
+The [`denoise-paired` action](xref:_library-ext#q2-action-dada2-denoise-paired), which we'll use here, requires four parameters that are used in quality filtering:
+- `trim-left-f a`, which trims off the first `a` bases of each forward read
+- `trunc-len-f b` which truncates each forward read at position `b`
+- `trim-left-r c`, which trims off the first `c` bases of each forward read
+- `trunc-len-r d` which truncates each forward read at position `d`
 This allows the user to remove low quality regions of the sequences.
-To determine what values to pass for these two parameters, you should review the *Interactive Quality Plot* tab in the `demux.qzv` file that was generated by `qiime demux summarize` above.
+To determine what values to pass for these parameters, you should review the *Interactive Quality Plot* tab in the [`demux.qzv`](#demux-summary-viz) file that was generated above.
 
-:::{tip} Question.
-Based on the plots you see in `demux.qzv`, what values would you choose for `--p-trim-left-f` and `--p-trunc-len-f` in this case?
+:::{exercise} Choosing "trim" and "trunc" parameter values.
+:label: dada2-trim-trunc
+Based on the plots you see in the [`demux.qzv`](#demux-summary-viz) file that was generated above, what values would you choose for `trim-left-f` and `trunc-len-f` in this case?
+What about `trim-left-r` and `trunc-len-r`?
 :::
 
-In the `demux.qzv` quality plots, we see that the quality of the initial bases seems to be high, so we won't trim any bases from the beginning of the sequences.
-The quality seems good all the way out to the end, so we'll trim at 250 bases.
-This next command may take up to 10 minutes to run, and is the slowest step in this tutorial.
+:::{solution} dada2-trim-trunc
+:class: dropdown
+The quality of the initial bases seems to be high, so I choose not to trim any bases from the beginning of the sequences.
+The quality also seems good all the way out to the end, though maybe dropping off after 250 bases.
+I'll therefore truncate at 250.
+I'll keep these values the same for both the forward and reverse reads, though that is not a requirement.
+:::
+
+Now run your DADA2 command.
+This step may take up to 10 minutes to complete - it's the longest running step in this tutorial.
 
 :::{describe-usage}
 
-rep_seqs, table, stats = use.action(
+asv_seqs, asv_table, stats = use.action(
     use.UsageAction(plugin_id='dada2',
                     action_id='denoise_paired'),
     use.UsageInputs(demultiplexed_seqs=demux,
@@ -141,13 +168,20 @@ rep_seqs, table, stats = use.action(
                     trunc_len_f=250,
                     trim_left_r=0,
                     trunc_len_r=250),
-    use.UsageOutputNames(representative_sequences='rep_seqs',
-                         table='table',
+    use.UsageOutputNames(representative_sequences='asv_seqs',
+                         table='asv_table',
                          denoising_stats='stats'))
 :::
 
+One of the outputs created by DADA2 is a summary of the denoising run.
+That is generated as an [Artifact](xref:_amplicon-docs-ext#term-artifact), so can't be viewed directly.
+However this is one of many QIIME 2 types that can be [viewed as Metadata](https://use.qiime2.org/en/latest/how-to-guides/artifacts-as-metadata.html) - a very powerful concept that we'll use again later in this tutorial.
+Learning to view artifacts as Metadata creates nearly infinite possibilities for how you can explore your microbiome data with QIIME 2.
+
+Here, we'll again use the [metadata plugins `tabulate` visualizer](xref:_library-ext#q2-action-metadata-tabulate), but this time we'll apply it to the DADA2 statistics.
+
 :::{describe-usage}
-stats_as_md = use.view_as_metadata('stats_md', stats)
+stats_as_md = use.view_as_metadata('stats_as_md', stats)
 
 use.action(
     use.UsageAction(plugin_id='metadata',
@@ -156,23 +190,64 @@ use.action(
     use.UsageOutputNames(visualization='stats'))
 :::
 
-## FeatureTable and FeatureData summaries
+:::{exercise} Exploring the DADA2 denoising statistics.
+Which three samples had the smallest percentage of input reads passing the quality filter?
+Refer back to your [tabulated metadata](#sample-metadata-tabulate-viz): what do you know about those samples (e.g., what values do they have in the `SampleType` column)?
+(Hint: the `sample-id` is the key that connects data across these two visualizations.)
+:::
 
-After the quality filtering step completes, you'll want to explore the resulting data.
+:::{exercise} Merging metadata.
+:label: merge-metadata
+If it's annoying to switch back and forth between visualizations to answer the question in the last exercise, you can create a combined tabulation of the metadata.
+Try to do that by adapting the instructions in [*How to merge metadata*](https://use.qiime2.org/en/latest/how-to-guides/merge-metadata.html).
+
+This is also useful if you want to create a large tabular summary describing your samples following analysis, as you can include as many different metadata objects as you'd like in these summaries.
+:::
+
+::::{solution} merge-metadata
+:class: dropdown
+
+:::{describe-usage}
+sample_metadata_and_dada2_stats_md = use.merge_metadata('sample_metadata_and_dada2_stats_md', sample_metadata, stats_as_md)
+
+use.action(
+    use.UsageAction(plugin_id='metadata',
+                    action_id='tabulate'),
+    use.UsageInputs(input=sample_metadata_and_dada2_stats_md),
+    use.UsageOutputNames(visualization='sample_metadata_w_dada2_stats'))
+:::
+::::
+
+### Feature table and feature data summaries
+
+After DADA2 completes, you'll want to explore the resulting data.
 You can do this using the following two commands, which will create visual summaries of the data.
-The `feature-table summarize` command will give you information on how many sequences are associated with each sample and with each feature, histograms of those distributions, and some related summary statistics.
-The `feature-table tabulate-seqs` command will provide a mapping of feature IDs to sequences, and provide links to easily BLAST each sequence against the NCBI nt database.
-The latter visualization will be very useful later in the tutorial, when you want to learn more about specific features that are important in the data set.
+The [`feature-table summarize` action](xref:_library-ext#q2-action-feature-table-summarize) command will give you information on how many sequences are associated with each sample and with each feature, histograms of those distributions, and some related summary statistics.
 
 :::{describe-usage}
 _, _, feature_frequencies = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='summarize_plus'),
-    use.UsageInputs(table=table,
+    use.UsageInputs(table=asv_table,
                     metadata=sample_metadata),
-    use.UsageOutputNames(summary='table',
+    use.UsageOutputNames(summary='asv_table',
                          sample_frequencies='sample_frequencies',
                          feature_frequencies='feature_frequencies'))
+:::
+
+:::{exercise} Exploring the feature table summary -- part 1.
+What is the total number of sequences represented in the feature table?
+What is the identifier of the feature that is observed the most number of times (i.e., has the highest frequency)?
+:::
+
+The [`feature-table tabulate-seqs` action](xref:_library-ext#q2-action-feature-table-tabulate-seqs) command will provide a mapping of feature IDs to sequences, and provide links to easily BLAST each sequence against the NCBI nt database.
+We can also include the feature frequency information in this visualization by passing it as metadata, similar to how we [merged metadata](#merge-metadata) in the exercise above.
+In this case, however, we're looking a *feature metadata*, as opposed to *sample metadata*.
+As far as QIIME 2 is concerned, there is no difference between these two - in our case, it'll only be the identifiers that differ.
+
+This visualization will be very useful later in the tutorial, when you want to learn more about specific features that are important in the data set.
+
+:::{describe-usage}
 
 feature_frequencies_as_md = use.view_as_metadata('feature_frequencies_md',
                                                  feature_frequencies)
@@ -180,39 +255,59 @@ feature_frequencies_as_md = use.view_as_metadata('feature_frequencies_md',
 use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='tabulate_seqs'),
-    use.UsageInputs(data=rep_seqs,
+    use.UsageInputs(data=asv_seqs,
                     metadata=feature_frequencies_as_md),
-    use.UsageOutputNames(visualization='rep_seqs'),
+    use.UsageOutputNames(visualization='asv_seqs'),
 )
 :::
+
+:::{exercise} Exploring feature data -- part 1.
+What is the taxonomy associated with the most frequently observed feature, based on a BLAST search?
+:::
+
+### Filtering features from a feature table
 
 If you review the tabulated feature sequences, or the feature detail table of the feature table summary, you'll notice that there are many sequences that are observed in only a single sample.
 Let's filter those out to reduce the number of sequences we're working with - this will speed up several slower steps that are coming up.
+
+This is a two-step process.
 First we filter our feature table, and then we use the new feature table to filter our sequences to only the ones that are contained in the new table.
-We'll include `_ms2` in the new output names to remind us that these are filtered to those features in a **m**inimum of **2** **s**amples.
+
+::::{margin}
+:::{tip}
+I include `_ms2` in the new output names here to remind us that these are filtered to those features in a **m**inimum of **2** **s**amples.
+Generally speaking, file names are a convenient place to store information like this, but they're unreliable.
+File names can easily be changed, and therefore could be modified to contain inaccurate information about the data they contain.
+
+Luckily, [QIIME 2's provenance tracking system](xref:_amplicon-docs-ext#getting-started:provenance) records all of the information that we need about how results were generated.
+We're therefore free to include information like this in file names if it's helpful for us, but we shouldn't ever rely on the file names.
+If in doubt -- and always be in doubt 🕵️‍♀️ -- refer to the data provenance.
+
+QIIME 2's data provenance is your source for the truth about how a result was created.
+:::
+::::
 
 :::{describe-usage}
-table_ms2, = use.action(
+asv_table_ms2, = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='filter_features'),
-    use.UsageInputs(table=table,
+    use.UsageInputs(table=asv_table,
                     min_samples=2),
-    use.UsageOutputNames(filtered_table='table_ms2'),
+    use.UsageOutputNames(filtered_table='asv_table_ms2'),
 )
 :::
-
 
 :::{describe-usage}
-rep_seqs_ms2, = use.action(
+asv_seqs_ms2, = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='filter_seqs'),
-    use.UsageInputs(data=rep_seqs,
-                    table=table_ms2),
-    use.UsageOutputNames(filtered_data='rep_seqs_ms2'),
+    use.UsageInputs(data=asv_seqs,
+                    table=asv_table_ms2),
+    use.UsageOutputNames(filtered_data='asv_seqs_ms2'),
 )
 :::
 
-:::{exercise}
+:::{exercise} Exploring the feature table summary -- part 2.
 :label: filtered-feature-table-summary
 Now that you have a second (filtered) feature table, create your own command to summarize it, like we did for the original feature table.
 How many features did we lose as a result of this filter?
@@ -224,19 +319,127 @@ How many total sequences did we lose?
 Here's the command you would use:
 
 :::{describe-usage}
-use.action(
+_, _, feature_frequencies_ms2 = use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='summarize_plus'),
-    use.UsageInputs(table=table_ms2,
+    use.UsageInputs(table=asv_table_ms2,
                     metadata=sample_metadata),
-    use.UsageOutputNames(summary='table_ms2',
+    use.UsageOutputNames(summary='asv_table_ms2',
                          sample_frequencies='sample_frequencies_ms2',
                          feature_frequencies='feature_frequencies_ms2'))
+:::
+
+Be sure to run this as we're going to use one of the results below.
+::::
+
+### Taxonomic annotation
+
+Before we complete our upstream analysis steps, we'll generate taxonomic annotations for our sequences using the [feature-classifier plugin](xref:_library-ext#q2-plugin-feature-classifier).
+
+::::{note}
+The taxonomic classifier used here is very specific to the sample preparation and sequencing protocols used for this study, and Greengenes 13_8, which it is trained on, [is an outdated reference database](https://forum.qiime2.org/t/introducing-greengenes2-2022-10/25291).
+The reason we use it here is because the reference data is relatively small, so classification can be run on most modern computers with this classifier[^build-requirements-exceed-resources].
+
+When you're ready to work on your own data, one of the choices you'll need to make is what classifier to use for your data.
+You can find pre-trained classifiers the QIIME 2 Library [*Resources* page](https://library.qiime2.org/data-resources), and [lots of discussion of this topic on the Forum](https://forum.qiime2.org/tag/taxonomy).
+We strongly recommend the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6), and you can find builds of these on the [*Resources* page](https://library.qiime2.org/data-resources)
+::::
+
+First, we'll download a pre-trained classifier artifact.
+
+:::{describe-usage}
+
+def classifier_factory():
+    from urllib import request
+    from qiime2 import Artifact
+    fp, _ = request.urlretrieve(
+        'https://data.qiime2.org/classifiers/sklearn-1.4.2/greengenes/gg-13-8-99-515-806-nb-classifier.qza')
+
+    return Artifact.load(fp)
+
+classifier = use.init_artifact('suboptimal-16S-rRNA-classifier', classifier_factory)
+:::
+
+Then, we'll apply it to our sequences using [`classify-sklearn`](xref:_library-ext#q2-action-feature-classifier-classify-sklearn).
+
+:::{describe-usage}
+taxonomy, = use.action(
+    use.UsageAction(plugin_id='feature_classifier',
+                    action_id='classify_sklearn'),
+    use.UsageInputs(classifier=classifier,
+                    reads=asv_seqs_ms2),
+    use.UsageOutputNames(classification='taxonomy'))
+:::
+
+Then, to get an initial look at our taxonomic classifications, let's integrate taxonomy in the sequence summary, like the one we generated above.
+
+::::{margin}
+:::{tip}
+If you want to compare taxonomic annotations achieved with different classifiers, you can do that with the [`feature-table tabulate-seqs` action](xref:_library-ext#q2-action-feature-table-tabulate-seqs) by passing in multiple `FeatureData[Taxonomy]` artifacts.
+See an example of what that result might look like [here](https://view.qiime2.org/visualization/?src=https://zenodo.org/api/records/13887457/files/asv-seqs-ms10.qzv/content).
+
+While you have that visualization loaded, take a look at the data provenance.
+The complexity of that data provenance should give you an idea of why it's helpful to have the computer record all of this information, rather than trying to embed it all in file names or keep track of it in your written notes.
+
+What was used as the DADA2 trim and trunc parameters for the data leading to this visualization?
+(Hint: use the provenance search feature).
 :::
 ::::
 
 
-## Generate a tree for phylogenetic diversity analyses
+:::{describe-usage}
+
+feature_frequencies_ms2_as_md = use.view_as_metadata('feature_frequencies',
+                                                     feature_frequencies_ms2)
+
+taxonomy_collection = use.construct_artifact_collection(
+    'taxonomy_collection', {'Greengenes-13-8': taxonomy}
+)
+
+use.action(
+    use.UsageAction(plugin_id='feature_table',
+                    action_id='tabulate_seqs'),
+    use.UsageInputs(data=asv_seqs_ms2,
+                    taxonomy=taxonomy_collection,
+                    metadata=feature_frequencies_ms2_as_md),
+    use.UsageOutputNames(visualization='asv_seqs_ms2'),
+)
+:::
+
+:::{exercise} Exploring feature data -- part 1.
+What is the taxonomy associated with the most frequently observed feature, based on a BLAST search?
+How does that compare to the taxonomy assigned by our feature classifier?
+
+In general, we tend to trust the results of our feature classifier over those generated by BLAST, though the BLAST results are good for a quick look or a sanity check.
+The reason for this is that the reference databases used with our feature classifiers tend to be specifically designed for this purpose and in some cases all of the sequences included are vetted.
+The BLAST databases can contain mis-annotations that may negatively impact the classifications.
+:::
+
+:::{tip} Question.
+Recall that our `asv-seqs.qzv` visualization allows you to easily BLAST the sequence associated with each feature against the NCBI nt database.
+Using that visualization and the `taxonomy.qzv` visualization created here, compare the taxonomic assignments with the taxonomy of the best BLAST hit for a few features.
+How similar are the assignments?
+If they're dissimilar, at what *taxonomic level* do they begin to differ (e.g., species, genus, family, ...)?
+:::
+
+### Building a tree for phylogenetic diversity calculations
+
+QIIME supports several phylogenetic diversity metrics, including Faith's Phylogenetic Diversity and weighted and unweighted UniFrac.
+In addition to counts of features per sample (i.e., the data in the `FeatureTable[Frequency]` QIIME 2 artifact), these metrics require a rooted phylogenetic tree relating the features to one another.
+The amplicon distribution offers a few ways to build these trees, including a reference-based approach in the [fragment-insertion plugin](xref:_library-ext#q2-plugin-fragment-insertion) and *de novo* (i.e., reference-free) approaches in the [phylogeny plugin](xref:_library-ext#q2-plugin-phylogeny).
+
+The reference based approach, by default, is specific to 16S rRNA marker gene analysis.
+We could use that here, but the runtime is too long for our documentation.[^build-requirements-exceed-resources]
+If you'd like to see this demonstrated, you can refer to the [Parkinson's Mouse tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
+
+The *de novo* approach is known to generate low quality trees, but can be used with any marker gene (not just 16S).
+If you'd like to see this demonstrated, you can refer to the [](xref:_amplicon-docs-ext#moving-pictures-tutorial).
+
+For those reasons, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
+
+## Downstream data analysis
+
+### Diversity calculations
 
 **Replace with q2-kmerizer and q2-boots?**
 
@@ -244,8 +447,8 @@ use.action(
 kmer_table, = use.action(
     use.UsageAction(plugin_id='kmerizer',
                     action_id='seqs_to_kmers'),
-    use.UsageInputs(table=table_ms2,
-                    sequences=rep_seqs_ms2),
+    use.UsageInputs(table=asv_table_ms2,
+                    sequences=asv_seqs_ms2),
     use.UsageOutputNames(kmer_table='kmer_table')
 )
 :::
@@ -260,16 +463,7 @@ use.action(
 )
 :::
 
-QIIME supports several phylogenetic diversity metrics, including Faith's Phylogenetic Diversity and weighted and unweighted UniFrac.
-In addition to counts of features per sample (i.e., the data in the `FeatureTable[Frequency]` QIIME 2 artifact), these metrics require a rooted phylogenetic tree relating the features to one another.
-This information will be stored in a `Phylogeny[Rooted]` QIIME 2 artifact.
-To generate a phylogenetic tree we will use `align-to-tree-mafft-fasttree` pipeline from the `q2-phylogeny` plugin.
 
-First, the pipeline uses the `mafft` program to perform a multiple sequence alignment of the sequences in our `FeatureData[Sequence]` to create a `FeatureData[AlignedSequence]` QIIME 2 artifact.
-Next, the pipeline masks (or filters) the alignment to remove positions that are highly variable.
-These positions are generally considered to add noise to a resulting phylogenetic tree.
-Following that, the pipeline applies FastTree to generate a phylogenetic tree from the masked alignment.
-The FastTree program creates an unrooted tree, so in the final step in this section midpoint rooting is applied to place the root of the tree at the midpoint of the longest tip-to-tip distance in the unrooted tree.
 
 ## Alpha and beta diversity analysis
 
@@ -460,64 +654,6 @@ What do you think is happening here?
 
 ## Taxonomic analysis
 
-**[Weighted classifier](https://data.qiime2.org/classifiers/sklearn-1.4.2/gtdb/gtdb_diverse_weighted_classifier_r220.qza) is using too much memory for RTD builds.**
-**Bump the annotation step up for an "upstream" versus "downstream" split in this document.**
-
-In the next sections we'll begin to explore the taxonomic composition of the samples, and again relate that to sample metadata.
-The first step in this process is to assign taxonomy to the sequences in our `FeatureData[Sequence]` QIIME 2 artifact.
-We'll do that using a pre-trained Naive Bayes classifier and the `q2-feature-classifier` plugin.
-This classifier was trained on the Greengenes 13_8 99% OTUs, where the sequences have been trimmed to only include 250 bases from the region of the 16S that was sequenced in this analysis (the V4 region, bound by the 515F/806R primer pair).
-We'll apply this classifier to our sequences, and we can generate a visualization of the resulting mapping from sequence to taxonomy.
-
-::::{note}
-The taxonomic classifier used here is very specific to the sample preparation and sequencing protocols used for this study, and [Greengenes 13_8, which it is trained on, is an outdated reference database](https://forum.qiime2.org/t/introducing-greengenes2-2022-10/25291).
-The reason we use it here is because the reference data is relatively small, so classification can be run on most modern computers with this classifier.
-
-Generally speaking, we think it's not necessary to use a classifier that was trained on sequences that were trimmed based on the primers you sequenced with.
-In practice we notice very minor differences, if any, relative to those trained on full-length sequences.
-Far more impactful is the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6).
-
-When you're ready to work on your own data, one of the choices you'll need to make is what classifier to use for your data.
-You can find pre-trained classifiers on our [*Resources* page](https://resources.qiime2.org/), and [lots of discussion of this topic on the Forum](https://forum.qiime2.org/tag/taxonomy).
-::::
-
-:::{describe-usage}
-
-def classifier_factory():
-    from urllib import request
-    from qiime2 import Artifact
-    fp, _ = request.urlretrieve(
-        'https://data.qiime2.org/classifiers/sklearn-1.4.2/greengenes/gg-13-8-99-515-806-nb-classifier.qza')
-
-    return Artifact.load(fp)
-
-classifier = use.init_artifact('16S-rRNA-classifier', classifier_factory)
-:::
-
-:::{describe-usage}
-
-taxonomy, = use.action(
-    use.UsageAction(plugin_id='feature_classifier',
-                    action_id='classify_sklearn'),
-    use.UsageInputs(classifier=classifier,
-                    reads=rep_seqs_ms2),
-    use.UsageOutputNames(classification='taxonomy'))
-
-taxonomy_as_md = use.view_as_metadata('taxonomy_as_md', taxonomy)
-
-use.action(
-    use.UsageAction(plugin_id='metadata',
-                    action_id='tabulate'),
-    use.UsageInputs(input=taxonomy_as_md),
-    use.UsageOutputNames(visualization='taxonomy'))
-:::
-
-:::{tip} Question.
-Recall that our `rep-seqs.qzv` visualization allows you to easily BLAST the sequence associated with each feature against the NCBI nt database.
-Using that visualization and the `taxonomy.qzv` visualization created here, compare the taxonomic assignments with the taxonomy of the best BLAST hit for a few features.
-How similar are the assignments?
-If they're dissimilar, at what *taxonomic level* do they begin to differ (e.g., species, genus, family, ...)?
-:::
 
 Next, we can view the taxonomic composition of our samples with interactive bar plots.
 Generate those plots with the following command and then open the visualization.
@@ -527,10 +663,21 @@ Generate those plots with the following command and then open the visualization.
 use.action(
     use.UsageAction(plugin_id='taxa',
                     action_id='barplot'),
-    use.UsageInputs(table=table_ms2,
+    use.UsageInputs(table=asv_table_ms2,
                     taxonomy=taxonomy,
                     metadata=sample_metadata),
     use.UsageOutputNames(visualization='taxa_bar_plots'))
+:::
+
+:::{exercise} Which input table?
+:label: why-asv-table
+Why are we using the ASV table when generating our taxonomic barplot, rather than the kmer table that we've been using in the last few steps?
+:::
+
+:::{solution} why-asv-table
+:class: dropdown
+We use the ASV table here because the feature ids in that table are the same as the ones used in the `FeatureData[Taxonomy]` artifact.
+Additionally, kmerization of our data is a tool used for computing diversity metrics - not something we generally intend to use throughout our analyses.
 :::
 
 :::{tip} Question.
@@ -635,9 +782,14 @@ use.action(
 
 -->
 
-## Next steps
+## Replay provenance
+
+**Update this section!**
 
 You might next want to try to adapt the commands presented in this tutorial to your own data, adjusting parameter settings and metadata column headers as is relevant.
 If you need help, head over to the [QIIME 2 Forum](https://forum.qiime2.org).
 
 
+[^build-requirements-exceed-resources]: The resource requirements exceed those provided by the [*Read the Docs* (RTD) build system](https://docs.readthedocs.com/platform/stable/builds.html#build-resources), which is used to build the documentation that you're reading.
+ RTD provides systems with 7GB of RAM for 30 minutes maximum to build documentation.
+ That's a very reasonable (and generous) allocation for building documentation, so we choose to work within those contraints rather than creating our own build system like we've had in the past (e.g., for `https://docs.qiime2.org`).
