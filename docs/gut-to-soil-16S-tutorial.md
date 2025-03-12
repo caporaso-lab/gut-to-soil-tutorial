@@ -77,7 +77,7 @@ Navigate to QIIME 2 View, and drag and drop the visualization that was created t
 This tutorial begins with paired-end read sequencing data that has already been demultiplexed and imported into a QIIME 2 Artifact.
 Because sequence data can be delivered to you in many different forms, it's not possible to cover the varieties here.
 Instead we refer you to [](xref:_amplicon-docs-ext#how-to-import-export) to learn how to import your data.
-If you want to learn why importing is necessary, refer to [](xref:_amplicon-docs-ext#import-explanation).
+If you want to learn why importing is necessary, refer to [Why importing is necessary](https://amplicon-docs.readthedocs.io/en/latest/explanations/why-importing.html).
 
 ::::{margin}
 :::{tip}
@@ -126,7 +126,7 @@ Let's jump into our upstream analysis.
 
 QIIME 2 plugins are available for several quality control methods, including [DADA2](https://doi.org/10.1038/nmeth.3869), [Deblur](https://doi.org/10.1128/msystems.00191-16), and [basic quality-score-based filtering](https://doi.org/10.1038/nmeth.2276).
 In this tutorial we present this step using [DADA2](https://www.ncbi.nlm.nih.gov/pubmed/27214047).
-The result of this method will be a `Featureasv_table[Frequency]` QIIME 2 artifact, which contains counts (frequencies) of each unique sequence in each sample in the dataset, and a `FeatureData[Sequence]` QIIME 2 artifact, which maps feature identifiers in the `FeatureTable` to the sequences they represent.
+The result of this method will be a `FeatureTable[Frequency]` QIIME 2 artifact, which contains counts (frequencies) of each unique sequence in each sample in the dataset, and a `FeatureData[Sequence]` QIIME 2 artifact, which maps feature identifiers in the `FeatureTable` to the sequences they represent.
 
 DADA2 is a pipeline for detecting and correcting (where possible) Illumina amplicon sequence data.
 As implemented in the [dada2 plugin](xref:_library-ext#q2-plugin-dada2), this quality control process will additionally filter any phiX reads (commonly present in marker gene Illumina sequence data) that are identified in the sequencing data, filter chimeric sequences, and merge paired end reads.
@@ -340,7 +340,7 @@ The reason we use it here is because the reference data is relatively small, so 
 
 When you're ready to work on your own data, one of the choices you'll need to make is what classifier to use for your data.
 You can find pre-trained classifiers the QIIME 2 Library [*Resources* page](https://library.qiime2.org/data-resources), and [lots of discussion of this topic on the Forum](https://forum.qiime2.org/tag/taxonomy).
-We strongly recommend the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6), and you can find builds of these on the [*Resources* page](https://library.qiime2.org/data-resources)
+We strongly recommend the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6), and you can find builds of these on the [*Resources* page](https://library.qiime2.org/data-resources). If you don't find a classifier that will work for you, you can learn [how to train your own](https://amplicon-docs.readthedocs.io/en/latest/how-to-guides/train-a-feature-classifier.html).
 ::::
 
 First, we'll download a pre-trained classifier artifact.
@@ -388,7 +388,7 @@ What was used as the DADA2 trim and trunc parameters for the data leading to thi
 :::{describe-usage}
 
 asv_frequencies_ms2_as_md = use.view_as_metadata('asv_frequencies',
-                                                     asv_frequencies_ms2)
+                                                 asv_frequencies_ms2)
 
 taxonomy_collection = use.construct_artifact_collection(
     'taxonomy_collection', {'Greengenes-13-8': taxonomy}
@@ -470,8 +470,8 @@ use.action(
     use.UsageInputs(table=kmer_table,
                     sample_metadata=sample_metadata),
     use.UsageOutputNames(summary='kmer_table',
-                         sample_frequencies='sample_frequencies',
-                         feature_frequencies='kmer_frequencies')
+                         sample_frequencies='kmer_sample_frequencies',
+                         feature_frequencies='kmer_feature_frequencies')
 )
 :::
 
@@ -562,10 +562,12 @@ evenness_vector = use.get_artifact_collection_member(
     'evenness_vector', core_metrics.alpha_diversities, 'evenness')
 :::
 
-:::{note}
+::::{margin}
+:::{tip}
 In many Illumina runs you'll observe a few samples that have very low sequence counts.
 You will typically want to exclude those from the analysis by choosing a larger value for the sampling depth at this stage.
 :::
+::::
 
 After computing diversity metrics, we can begin to explore the microbial composition of the samples in the context of the sample metadata.
 You can review the sample metadata using one of the tabulated views of this file that [we created above](#sample-metadata-tabulate-viz).
@@ -633,7 +635,7 @@ Which sample has the lowest microbiome richness?
 
 ### Alpha rarefaction plotting
 
-In this section we'll explore alpha diversity as a function of sampling depth using the `qiime diversity alpha-rarefaction`[`alpha-rarefaction` action](xref:_library-ext#q2-action-diversity-alpha-rarefaction).
+In this section we'll explore alpha diversity as a function of sampling depth using the[`alpha-rarefaction` action](xref:_library-ext#q2-action-diversity-alpha-rarefaction).
 This visualizer computes one or more alpha diversity metrics at multiple sampling depths, in steps between 1 (optionally controlled with `min-depth`) and the value provided as `max-depth`.
 At each sampling depth step, 10 rarefied tables will be generated, and the diversity metrics will be computed for all samples in the tables.
 The number of iterations (rarefied tables computed at each sampling depth) can be controlled with the `iterations` parameter.
@@ -768,7 +770,8 @@ use.action(
     use.UsageAction(plugin_id='composition',
                     action_id='da_barplot'),
     use.UsageInputs(data=genus_ancombc,
-                    significance_threshold=0.001),
+                    significance_threshold=0.001,
+                    level_delimiter=';'),
     use.UsageOutputNames(visualization='genus_ancombc'))
 :::
 
