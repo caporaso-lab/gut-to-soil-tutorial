@@ -6,7 +6,7 @@ Let's start with a sampling of paraphrased responses we get when we talk about t
 - "Isn't that dangerous?" ☣
 - "Do you think you're going to convince people to do this?" 🤪
 
-If one of these is your reaction, or you're just interested in learning more about why we're interested in the microbiomes of human excrement composting, read on...
+If one of these is your reaction, or you're just curious about why we study the microbiomes of human excrement composting, read on...
 
 :::{note}
 The following was originally published as: [Meilander, Jewell, and Caporaso (2024)](https://doi.org/10.1186/s40168-024-01894-x).

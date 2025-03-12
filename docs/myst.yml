@@ -10,7 +10,8 @@ project:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
   references:
     qiime2: https://develop.qiime2.org/en/latest/
-    amplicon-docs: https://amplicon-docs.readthedocs.io/en/latest/
+    _amplicon-docs-ext: https://amplicon-docs.readthedocs.io/en/latest/
+    _library-ext: https://library.qiime2.org
 
   plugins:
     - type: executable

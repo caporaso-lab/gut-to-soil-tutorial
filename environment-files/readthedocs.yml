@@ -11,3 +11,4 @@ dependencies:
     - jupyter-book==2.0.0a1
     - q2_kmerizer@git+https://github.com/bokulich-lab/q2-kmerizer.git@main
     - q2_boots@git+https://github.com/caporaso-lab/q2-boots.git@main
+    - hdmedians
