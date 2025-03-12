@@ -468,7 +468,7 @@ use.action(
     use.UsageAction(plugin_id='feature_table',
                     action_id='summarize_plus'),
     use.UsageInputs(table=kmer_table,
-                    sample_metadata=sample_metadata),
+                    metadata=sample_metadata),
     use.UsageOutputNames(summary='kmer_table',
                          sample_frequencies='kmer_sample_frequencies',
                          feature_frequencies='kmer_feature_frequencies')
