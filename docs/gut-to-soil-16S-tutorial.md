@@ -750,7 +750,7 @@ genus_table_ms2_dominant_sample_types, = use.action(
 Then, we'll apply ANCOM-BC to see which genera are differentially abundant across those sample types.
 I specify a reference level here as this defines what each group is compared against.
 Since the focus of this study is HEC, I choose that as my reference level.
-That will let us see what genera are over or under represented in the Human Excrement Compost samples relative to the other two sample groups.
+That will let us see what genera are over- or under-represented in the other two sample groups (*Human Excrement* and *Food Compost*) relative to HEC, as HEC defines the "global intercept" that will be measured against.
 
 :::{describe-usage}
 genus_ancombc, = use.action(
