@@ -2,7 +2,7 @@
 # Gut-to-soil axis 16S rRNA analysis tutorial 💩🌱
 
 :::{warning}
-This document is a work in progress as of 8 March 2025.
+This document is a work in progress as of 24 March 2025.
 Commands/urls/text may be unreliable while in development.
 🚜
 :::
@@ -68,7 +68,7 @@ You can learn more about viewing Visualizations, including alternatives to QIIME
 :::
 ::::
 
-This will generate a QIIME 2 [Visualization](xref:_amplicon-docs-ext#term-visualization).
+This will generate a QIIME 2 [Visualization](https://amplicon-docs.readthedocs.io/en/latest/explanations/getting-started.html#getting-started-artifacts-and-visualizations).
 Visualizations can be viewed by loading them with [QIIME 2 View](https://view.qiime2.org).
 Navigate to QIIME 2 View, and drag and drop the visualization that was created to view it.
 
@@ -76,14 +76,14 @@ Navigate to QIIME 2 View, and drag and drop the visualization that was created t
 
 This tutorial begins with paired-end read sequencing data that has already been demultiplexed and imported into a QIIME 2 Artifact.
 Because sequence data can be delivered to you in many different forms, it's not possible to cover the varieties here.
-Instead we refer you to [](xref:_amplicon-docs-ext#how-to-import-export) to learn how to import your data.
+Instead we refer you to [*How to import data for use with QIIME 2*](https://amplicon-docs.readthedocs.io/en/latest/how-to-guides/how-to-import.html) to learn how to import your data.
 If you want to learn why importing is necessary, refer to [Why importing is necessary](https://amplicon-docs.readthedocs.io/en/latest/explanations/why-importing.html).
 
 ::::{margin}
 :::{tip}
 You should ask your sequencing center to provide data already demultiplexed.
 In some cases, they may be able to provide a "QIIME 2 demux artifacts".
-If not, ask them to provide a [fastq manifest file](xref:_amplicon-docs-ext#import-fastq-manifest) for your sequencing data.
+If not, ask them to provide a [fastq manifest file](https://amplicon-docs.readthedocs.io/en/latest/how-to-guides/how-to-import.html#import-fastq-manifest) for your sequencing data.
 It should be easy for them to generate.
 :::
 ::::
@@ -172,7 +172,7 @@ asv_seqs, asv_table, stats = use.action(
 :::
 
 One of the outputs created by DADA2 is a summary of the denoising run.
-That is generated as an [Artifact](xref:_amplicon-docs-ext#term-artifact), so can't be viewed directly.
+That is generated as an [Artifact](https://amplicon-docs.readthedocs.io/en/latest/explanations/getting-started.html#getting-started-artifacts-and-visualizations), so can't be viewed directly.
 However this is one of many QIIME 2 types that can be [viewed as Metadata](https://use.qiime2.org/en/latest/how-to-guides/artifacts-as-metadata.html) - a very powerful concept that we'll use again later in this tutorial.
 Learning to view artifacts as Metadata creates nearly infinite possibilities for how you can explore your microbiome data with QIIME 2.
 
@@ -277,7 +277,7 @@ I include `_ms2` in the new output names here to remind us that these are filter
 Generally speaking, file names are a convenient place to store information like this, but they're unreliable.
 File names can easily be changed, and therefore could be modified to contain inaccurate information about the data they contain.
 
-Luckily, [QIIME 2's provenance tracking system](xref:_amplicon-docs-ext#getting-started:provenance) records all of the information that we need about how results were generated.
+Luckily, [QIIME 2's provenance tracking system](https://amplicon-docs.readthedocs.io/en/latest/explanations/getting-started.html#getting-started-provenance) records all of the information that we need about how results were generated.
 We're therefore free to include information like this in file names if it's helpful for us, but we shouldn't ever rely on the file names.
 If in doubt -- and always be in doubt 🕵️‍♀️ -- refer to the data provenance.
 
@@ -432,7 +432,7 @@ We could use that here, but the runtime is too long for our documentation.[^buil
 If you'd like to see this demonstrated, you can refer to the [Parkinson's Mouse tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
 
 The *de novo* approach is known to generate low quality trees, but can be used with any marker gene (not just 16S).
-If you'd like to see this demonstrated, you can refer to the [](xref:_amplicon-docs-ext#moving-pictures-tutorial).
+If you'd like to see this demonstrated, you can refer to the [*Moving Pictures](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html#generate-a-tree-for-phylogenetic-diversity-analyses) tutorial.
 
 For those reasons, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
 
@@ -795,7 +795,7 @@ In the meantime, here are some suggestions to continue your learning:
 
 We're also in the process of refactoring our statistical methods for assessing alpha and beta diversity across groups, using the new [stats plugin](xref:_library-ext#q2-plugin-stats).
 We're therefore holding off on integrating statistical analysis until we have that ready.
-In the meantime, you can refer to you can refer to the [](xref:_amplicon-docs-ext#moving-pictures-tutorial), as well as the [sample-classifier](https://docs.qiime2.org/2024.10/tutorials/sample-classifier/) and [longitudinal](https://docs.qiime2.org/2024.10/tutorials/longitudinal/) tutorials.
+In the meantime, you can refer to you can refer to the [*Moving Pictures*](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html) tutorial, as well as the [sample-classifier](https://docs.qiime2.org/2024.10/tutorials/sample-classifier/) and [longitudinal](https://docs.qiime2.org/2024.10/tutorials/longitudinal/) tutorials.
 
 ## Replay provenance (work in progress!)
 
