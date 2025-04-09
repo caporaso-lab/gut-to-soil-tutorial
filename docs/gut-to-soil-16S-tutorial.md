@@ -16,7 +16,7 @@ The conda environment file used to create the deployment where the commands in t
 
 In this tutorial you'll learn an end-to-end microbiome marker gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
-The full data set for the paper can be found in [the paper's Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
+The full data set for the paper can be found in [the study's Artifact Repository](https://doi.org/10.5281/zenodo.13887456).
 In the final step (**not yet written, as of 11 March 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
 
 The data used in this tutorial was generated using the [Earth Microbiome Project protocol](https://doi.org/10.1038/ismej.2012.8).
@@ -790,7 +790,7 @@ In the meantime, here are some suggestions to continue your learning:
 1. Build a machine learning classifier that classifies samples accordining to the three dominant sample types in the feature table that we used with ANCOM-BC.
  (Hint: see [`classify-samples`](xref:_library-ext#q2-action-sample-classifier-classify-samples).)
 1. Perform a longitudinal analysis that tracks samples from different buckets over time. Which taxa change most over time? (Hint: see [`feature-volatility`](xref:_library-ext#q2-action-longitudinal-feature-volatility).)
-1. Remember that the full data set (five sequencing runs) are available in the [gut-to-soil Artifact Archive](https://doi.org/10.5281/zenodo.13887456).
+1. Remember that the full data set (five sequencing runs) are available in the [gut-to-soil Artifact Repository](https://doi.org/10.5281/zenodo.13887456).
  Grab one of the larger sequencing runs (we worked with a small sequencing run that was generated as a preliminary test), and adapt the commands in this tutorial to work on a bigger data set.
 
 We're also in the process of refactoring our statistical methods for assessing alpha and beta diversity across groups, using the new [stats plugin](xref:_library-ext#q2-plugin-stats).
