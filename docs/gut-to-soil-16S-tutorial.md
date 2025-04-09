@@ -2,7 +2,7 @@
 # Gut-to-soil axis 16S rRNA analysis tutorial 💩🌱
 
 :::{warning}
-This document is a work in progress as of 24 March 2025.
+This document is a work in progress as of 9 April 2025, and some aspects of the workflow are still in development.
 Commands/urls/text may be unreliable while in development.
 🚜
 :::
@@ -339,8 +339,10 @@ The taxonomic classifier used here is very specific to the sample preparation an
 The reason we use it here is because the reference data is relatively small, so classification can be run on most modern computers with this classifier[^build-requirements-exceed-resources].
 
 When you're ready to work on your own data, one of the choices you'll need to make is what classifier to use for your data.
-You can find pre-trained classifiers the QIIME 2 Library [*Resources* page](https://library.qiime2.org/data-resources), and [lots of discussion of this topic on the Forum](https://forum.qiime2.org/tag/taxonomy).
-We strongly recommend the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6), and you can find builds of these on the [*Resources* page](https://library.qiime2.org/data-resources). If you don't find a classifier that will work for you, you can learn [how to train your own](https://amplicon-docs.readthedocs.io/en/latest/how-to-guides/train-a-feature-classifier.html).
+You can find pre-trained classifiers the QIIME 2 Library [*Resources* page](https://library.qiime2.org/data-resources).
+If you don't find a classifier that will work for you there, you may be able to [find one on the Forum](https://forum.qiime2.org/tag/taxonomy), or you can learn how to train your own [by referencing the RESCRIPt documentation](https://github.com/bokulich-lab/RESCRIPt).
+
+We strongly recommend the use of environment-weighted classifiers, as described in [Kaehler et al., (2019)](https://doi.org/10.1038/s41467-019-12669-6), and you can find builds of these on the [*Resources* page](https://library.qiime2.org/data-resources).
 ::::
 
 First, we'll download a pre-trained classifier artifact.
@@ -431,7 +433,7 @@ The reference based approach, by default, is specific to 16S rRNA marker gene an
 We could use that here, but the runtime is too long for our documentation.[^build-requirements-exceed-resources]
 If you'd like to see this demonstrated, you can refer to the [Parkinson's Mouse tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
 
-The *de novo* approach is known to generate low quality trees, but can be used with any marker gene (not just 16S).
+The *de novo* approach is known to generate low quality trees, but can be used with any phylogenetically informative marker gene (not just 16S).
 If you'd like to see this demonstrated, you can refer to the [*Moving Pictures](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html#generate-a-tree-for-phylogenetic-diversity-analyses) tutorial.
 
 For those reasons, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
@@ -442,10 +444,24 @@ As mentioned above, we tend to think of "downstream" analysis as beginning with 
 Now that we have those (with the exception of the tree, [which we won't use here](#phylogenetic-tree-building)), let's jump in.
 This is where it starts to get fun! ⛷️
 
-### Kmerization of our features
+(gut-to-soil:kmer-based-diversity-analysis)=
+### Kmer-based diversity analysis
+
+As mentioned above, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
+
+:::{warning} This section is a work in progress.
+When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), rarefaction/normalization of any type should be done at the ASV level before kmerization, not at the kmer level (as is illustrated here).
+This is because you are trying to normalize by sequencing depth, not kmer complexity.
+In the end, the difference should not be huge but this distinction could be important for some metrics.
+
+We're in the process of developing better integration between [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) and [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) which we'll ultimately illustrate here.
+For the time-being, consider the [](#gut-to-soil:kmer-based-diversity-analysis) section to be illustrative of new tools, but not yet something that you should directly reproduce.
+:::
+
+#### Kmerization of our features
 
 We'll start here by calculating alpha and beta diversity metrics.
-To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:q2doc-amplicon-target#term-stand-alone-plugin), [q2-kmerizer](https://forum.qiime2.org/t/q2-kmerizer-a-qiime-2-plugin-for-k-mer-based-diversity-analysis/32592).
+To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:q2doc-amplicon-target#term-stand-alone-plugin), [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer).
 This plugin splits ASV sequences into their constituent kmers, and creates a new feature table where those kmers (instead of ASVs) are the features.
 [The paper](https://doi.org/10.1128/msystems.01550-24) showed that this enables non-phylogenetic diversity metrics to achieve results highly correlated with those achieved by phylogenetic diversity metrics.
 
@@ -481,7 +497,7 @@ What is the most frequently occurring kmer in this table?
 How long are the kmers, and how could you change that if you wanted to?
 :::
 
-### Computing bootstrapped alpha and beta diversity metrics
+#### Computing bootstrapped alpha and beta diversity metrics
 
 QIIME 2's diversity analyses are available through the [diversity plugin](xref:q2doc-amplicon-target#q2-plugin-diversity), which supports computing alpha and beta diversity metrics, applying related statistical tests, and generating interactive visualizations.
 A relatively new stand-alone plugin, [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots), mirrors the interface of the diversity metric calculation actions in the diversity plugin, but generates more robust results because it integrates rarefaction and/or bootstrapping.
@@ -577,7 +593,7 @@ Open one of the Emperor plots that was generated by the previous command, and ex
 Which of the metadata categories results in samples grouping most by color?
 :::
 
-### Integrating additional information into PCoA scatter plots
+#### Integrating additional information into PCoA scatter plots
 
 The PCoA results that were computed by `core-metrics` are viewable as metadata, which opens them up to use with [the vizard plugin](xref:q2doc-amplicon-target#q2-plugin-diversity).
 Vizard is a general purpose plotting plugin, and works with any artifacts that can be viewed as metadata.
@@ -633,7 +649,7 @@ What other interesting relationships do you see when changing the x- and y-axes 
 Which sample has the lowest microbiome richness?
 :::
 
-### Alpha rarefaction plotting
+#### Alpha rarefaction plotting
 
 In this section we'll explore alpha diversity as a function of sampling depth using the[`alpha-rarefaction` action](xref:q2doc-amplicon-target#q2-action-diversity-alpha-rarefaction).
 This visualizer computes one or more alpha diversity metrics at multiple sampling depths, in steps between 1 (optionally controlled with `min-depth`) and the value provided as `max-depth`.
