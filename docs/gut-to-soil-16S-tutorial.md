@@ -8,8 +8,8 @@ Commands/urls/text may be unreliable while in development.
 :::
 
 :::{note}
-This guide assumes you are working in a QIIME 2 deployment containing the amplicon distribution and the standalone plugins [q2-boots](https://doi.org/10.12688/f1000research.156295.1) and [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24).
-The conda environment file used to create the deployment where the commands in this tutorial were run [can be found in the project's GitHub repository](https://github.com/caporaso-lab/gut-to-soil-tutorial/blob/main/environment-files/readthedocs.yml).
+This document was built with its own conda environment that includes the amplicon distribution and the standalone plugins [q2-boots](https://doi.org/10.12688/f1000research.156295.1) and [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24)..
+You can download the environment file that was used from the download link on the top-right of this article.
 :::
 
 ## Background

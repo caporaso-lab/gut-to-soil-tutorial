@@ -10,8 +10,9 @@ project:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
   references:
     q2doc-api-target: https://develop.qiime2.org/en/latest/
-    q2doc-amplicon-target: https://amplicon-docs.qiime2.org/en/latest/
+    q2doc-usage-target: https://use.qiime2.org/en/latest/
     q2doc-library-target: https://library.qiime2.org
+    q2doc-amplicon-target: https://amplicon-docs.qiime2.org/en/latest/
 
   plugins:
     - type: executable
@@ -21,6 +22,10 @@ project:
     - file: intro.md
     - file: gut-to-soil-16S-tutorial.md
     - file: why.md
+
+  downloads:
+    - file: _static/environment.yml
+      title: Conda environment file
 
 site:
   template: https://github.com/ebolyen/myst-book-theme-poc.git
