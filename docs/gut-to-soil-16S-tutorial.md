@@ -454,7 +454,9 @@ When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmer
 This is because you are trying to normalize by sequencing depth, not kmer complexity.
 In the end, the difference should not be huge but this distinction could be important for some metrics.
 
-We're in the process of developing better integration between [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) and [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) which we'll ultimately illustrate here.
+We just finished (15 April 2025) an improved integration between [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) and [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) which we'll ultimately illustrate here.
+**The new action, [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity), is what we recommend using.**
+This document will be updated shortly to reflect this.
 For the time-being, consider the [](#gut-to-soil:kmer-based-diversity-analysis) section to be illustrative of new tools, but not yet something that you should directly reproduce.
 :::
 
