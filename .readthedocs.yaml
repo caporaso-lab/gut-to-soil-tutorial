@@ -15,7 +15,6 @@ build:
     build:
       html:
         - PATH=$(pwd)/.env/bin/:$PATH q2doc refresh-cache
-        #- PATH=$(pwd)/.env/bin/:$PATH make autodoc
         - PATH=$(pwd)/.env/bin/:$PATH make html
         - mkdir -p $READTHEDOCS_OUTPUT
         - cp -a docs/_build/* $READTHEDOCS_OUTPUT/

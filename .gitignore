@@ -4,3 +4,4 @@ docs/_build/
 docs/data/
 .locks/
 .DS_Store
+docs/_static/environment.yml
