@@ -2,7 +2,7 @@
 # Gut-to-soil axis 16S rRNA analysis tutorial 💩🌱
 
 :::{warning}
-This document is a work in progress as of 9 April 2025, and some aspects of the workflow are still in development.
+This document is a work in progress as of 17 April 2025, and some aspects of the workflow are still in development.
 Commands/urls/text may be unreliable while in development.
 🚜
 :::
@@ -17,7 +17,7 @@ You can download the environment file that was used from the download link on th
 In this tutorial you'll learn an end-to-end microbiome marker gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
 The full data set for the paper can be found in [the study's Artifact Repository](https://doi.org/10.5281/zenodo.13887456).
-In the final step (**not yet written, as of 11 March 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
+In the final step (**not yet written, as of 17 April 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
 
 The data used in this tutorial was generated using the [Earth Microbiome Project protocol](https://doi.org/10.1038/ismej.2012.8).
 Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified using the F515-R806 primers - a broad-coverage primer pair for Bacteria that also amplifies some Archaea.
@@ -36,7 +36,6 @@ This `sample-metadata.tsv` file is used throughout the rest of the tutorial.
 To learn more about metadata in QIIME 2, including how it should be formatted, refer to [*Using QIIME 2*'s Metadata file format](https://use.qiime2.org/en/latest/references/metadata.html).
 
 To learn more about metadata standards, you can refer to [Chloe Herman's video on this topic](https://www.youtube.com/watch?v=erklD1bofzE), which was developed in collaboration with the [National Microbiome Data Collaborative (NMDC)](https://microbiomedata.org/).
-
 :::
 ::::
 
@@ -306,13 +305,13 @@ asv_seqs_ms2, = use.action(
 :::
 
 :::{exercise} Exploring the feature table summary -- part 2.
-:label: filtered-feature-table-summary
+:label: summarize-asv-table-ms2
 Now that you have a second (filtered) feature table, create your own command to summarize it, like we did for the original feature table.
 How many features did we lose as a result of this filter?
 How many total sequences did we lose?
 :::
 
-::::{solution} filtered-feature-table-summary
+::::{solution} summarize-asv-table-ms2
 :class: dropdown
 Here's the command you would use:
 
@@ -386,7 +385,6 @@ What was used as the DADA2 trim and trunc parameters for the data leading to thi
 :::
 ::::
 
-
 :::{describe-usage}
 
 asv_frequencies_ms2_as_md = use.view_as_metadata('asv_frequencies',
@@ -431,10 +429,10 @@ The amplicon distribution offers a few ways to build these trees, including a re
 
 The reference based approach, by default, is specific to 16S rRNA marker gene analysis.
 We could use that here, but the runtime is too long for our documentation.[^build-requirements-exceed-resources]
-If you'd like to see this demonstrated, you can refer to the [Parkinson's Mouse tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
+If you'd like to see this demonstrated, you can refer to the [*Parkinson's Mouse* tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
 
 The *de novo* approach is known to generate low quality trees, but can be used with any phylogenetically informative marker gene (not just 16S).
-If you'd like to see this demonstrated, you can refer to the [*Moving Pictures](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html#generate-a-tree-for-phylogenetic-diversity-analyses) tutorial.
+If you'd like to see this demonstrated, you can refer to the [*Moving Pictures* tutorial](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html#generate-a-tree-for-phylogenetic-diversity-analyses).
 
 For those reasons, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
 
@@ -448,136 +446,61 @@ This is where it starts to get fun! ⛷️
 ### Kmer-based diversity analysis
 
 As mentioned above, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
+This will use two [stand-alone QIIME 2 plugins](xref:q2doc-amplicon-target#term-stand-alone-plugin), [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) and [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), which are integrated through the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) action in q2-boots.
+To learn about kmerization of features and how this relates to phylogenetic diversity metrics, read the [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24) paper.
+[q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) provides actions that mirror the interface of the diversity metric calculation actions in the diversity plugin, but generates more robust results because it integrates rarefaction and/or bootstrapping.
+You can learn more about this in the [q2-boots paper](https://doi.org/10.12688/f1000research.156295.1).
 
-:::{warning} This section is a work in progress.
-When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), rarefaction/normalization of any type should be done at the ASV level before kmerization, not at the kmer level (as is illustrated here).
-This is because you are trying to normalize by sequencing depth, not kmer complexity.
-In the end, the difference should not be huge but this distinction could be important for some metrics.
-
-We just finished (15 April 2025) an improved integration between [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) and [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) which we'll ultimately illustrate here.
-**The new action, [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity), is what we recommend using.**
-This document will be updated shortly to reflect this.
-For the time-being, consider the [](#gut-to-soil:kmer-based-diversity-analysis) section to be illustrative of new tools, but not yet something that you should directly reproduce.
-:::
-
-#### Kmerization of our features
-
-We'll start here by calculating alpha and beta diversity metrics.
-To do this, in lieu of a phylogenetic tree, we're going to use a [stand-alone QIIME 2 plugin](xref:q2doc-amplicon-target#term-stand-alone-plugin), [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer).
-This plugin splits ASV sequences into their constituent kmers, and creates a new feature table where those kmers (instead of ASVs) are the features.
-[The paper](https://doi.org/10.1128/msystems.01550-24) showed that this enables non-phylogenetic diversity metrics to achieve results highly correlated with those achieved by phylogenetic diversity metrics.
-
-Let's generate our kmer feature table.
-
-:::{describe-usage}
-kmer_table, = use.action(
-    use.UsageAction(plugin_id='kmerizer',
-                    action_id='seqs_to_kmers'),
-    use.UsageInputs(table=asv_table_ms2,
-                    sequences=asv_seqs_ms2),
-    use.UsageOutputNames(kmer_table='kmer_table')
-)
-:::
-
-Let's also generate a summary of the feature table.
-
-:::{describe-usage}
-use.action(
-    use.UsageAction(plugin_id='feature_table',
-                    action_id='summarize_plus'),
-    use.UsageInputs(table=kmer_table,
-                    metadata=sample_metadata),
-    use.UsageOutputNames(summary='kmer_table',
-                         sample_frequencies='kmer_sample_frequencies',
-                         feature_frequencies='kmer_feature_frequencies')
-)
-:::
-
-:::{exercise}
-What is the median number of kmers associated with each sample?
-What is the most frequently occurring kmer in this table?
-How long are the kmers, and how could you change that if you wanted to?
-:::
-
-#### Computing bootstrapped alpha and beta diversity metrics
-
-QIIME 2's diversity analyses are available through the [diversity plugin](xref:q2doc-amplicon-target#q2-plugin-diversity), which supports computing alpha and beta diversity metrics, applying related statistical tests, and generating interactive visualizations.
-A relatively new stand-alone plugin, [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots), mirrors the interface of the diversity metric calculation actions in the diversity plugin, but generates more robust results because it integrates rarefaction and/or bootstrapping.
-Let's use that here, instead of the diversity plugin.
-
-We'll apply the `core-metrics` action, which bootstraps a `FeatureTable[Frequency]` (i.e., samples with replacement) to a user-specified sampling depth `n` times, computes several alpha and beta diversity metrics on each of the `n` bootstrapped feature tables, and then creates averaged alpha and beta diversity data artifacts as output.
-Those resulting artifacts can be used anywhere that the corresponding artifacts from the diversity plugin could be used.
-The `core-metrics` action also generates principle coordinates analysis (PCoA) plots using [the Emperor plugin](xref:q2doc-amplicon-target#q2-plugin-emperor) for each of the beta diversity metrics.
-
-The metrics computed by default are:
--   Alpha diversity
-    -   Shannon's diversity index (a quantitative measure of community
-        richness)
-    -   Observed Features (a qualitative measure of community richness)
-    -   Evenness (or Pielou's Evenness; a measure of community
-        evenness)
--   Beta diversity
-    -   Jaccard distance (a qualitative measure of community
-        dissimilarity)
-    -   Bray-Curtis distance (a quantitative measure of community
-        dissimilarity)
+[`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) is a [`qiime2.Pipeline`](xref:q2doc-amplicon-target#term-pipeline): a type of action that links multiple other QIIME 2 actions together for convenience.
+As such, it does a lot of work.
+Here are the steps that it takes:
+1. Resample the input feature table (i.e., the ASV table) to contain exactly `sampling-depth` sequences per sample, either by bootstrapping or rarefaction, `n` times.
+   Samples with fewer than `sampling-depth` sequences will be removed from the feature table and not included in the subsequent steps.
+   This will result in `n` feature tables.
+2. For each feature table resulting from step 1, using the input sequences (i.e., the ASV sequences), kmerize all sequences into kmers of length `kmer-size`. [^iab-database-searching]
+   Use this information to create one kmer table per resampled feature table.
+   This will result in `n` feature tables, where the features are kmers (instead of ASVs, as in the input feature table).
+3. Compute the user requested alpha and beta diversity metrics on each of the kmer tables resulting from step 2. [^forum-diversity-metrics]
+   The metrics computed by default are:
+    * Alpha diversity
+      * Shannon's diversity index (a quantitative measure of community richness)
+      * Observed Features (a qualitative measure of community richness)
+      * Evenness (i.e., Pielou's Evenness; a measure of community evenness)
+    * Beta diversity
+      * Jaccard distance (a qualitative measure of community dissimilarity)
+      * Bray-Curtis distance (a quantitative measure of community dissimilarity)
+4. For each diversity metric, average the results computed across the `n` kmer tables.
+   These results can be used in subsequent analysis steps (e.g., ordination, statistical modeling, machine learning).
+5. Perform PCoA ordination on the averaged beta diversity distance matrices resulting from Step 4. [^iab-machine-learning]
+6. Generate an interactive [q2-vizard scatter plot](xref:q2doc-amplicon-target#q2-action-vizard-scatterplot-2d) that contains all user-provided sample metadata, all averaged alpha diversity metrics, and the first three ordination axes for all PCoA matrices computed in step 5.
 
 ::::{margin}
-:::{tip}
-You can find additional information on these and other metrics availability in QIIME 2 in [this excellent forum post by a QIIME 2 community member](https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282).
-When you're ready, we'd love to have your contributions on the Forum as well!
+:::{note}
+When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), normalization should be done at the ASV level before kmerization, not at the kmer level.
+This is automated by the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) that we're using here.
+This is because you are trying to normalize by sequencing depth, not kmer complexity.
+In the end, the difference should not be huge but this distinction could be important for some metrics.
 :::
 ::::
 
-An important parameter that needs to be provided to this script is `sampling-depth`, which is the even sampling (i.e., bootstrapping or rarefaction) depth.
+A key parameter that needs to be provided to [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) is `sampling-depth`, which is the even sampling (i.e., bootstrapping or rarefaction) depth.
 Because most diversity metrics are sensitive to different sampling depths across different samples, the tables are randomly subsampled such that the total frequency for each sample is the user-specified sampling depth.
 For example, if you set `sampling-depth=500`, this step will subsample the counts in each sample so that each sample in the resulting table has a total frequency of 500.
 If the total frequency for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
 Choosing this value is tricky.
-We recommend making your choice by reviewing the information presented in the `kmer-table.qzv` file that was created above.
+We recommend making your choice by reviewing the information presented in the `asv-table-ms2.qzv` file that [you created above](#summarize-asv-table-ms2).
+
+::::{margin}
+:::{tip}
+[This video](https://www.youtube.com/watch?v=W1W9jcrMFHs) provides guidance on choosing an even sampling depth.
+:::
+::::
 
 :::{exercise} Choosing a sampling depth.
-View the `kmer-table.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
+View the `asv-table-ms2.qzv` QIIME 2 artifact, and in particular the *Interactive Sample Detail* tab in that visualization.
 What value would you choose to pass for `sampling-depth`?
 How many samples will be excluded from your analysis based on this choice?
-How many total sequences will you be analyzing in the `core-metrics` command?
-:::
-
-I'm going to choose values that is around the first quartile of the sample total frequencies.
-
-:::{describe-usage}
-core_metrics = use.action(
-    use.UsageAction(plugin_id='boots',
-                    action_id='core_metrics'),
-    use.UsageInputs(table=kmer_table,
-                    metadata=sample_metadata,
-                    sampling_depth=22000,
-                    n=10,
-                    replacement=True,
-                    alpha_average_method='median',
-                    beta_average_method='medoid'),
-    use.UsageOutputNames(
-        resampled_tables='bootstrap_tables',
-        alpha_diversities='bootstrap_alpha_diversities',
-        distance_matrices='bootstrap_distance_matrices',
-        pcoas='bootstrap_pcoas',
-        emperor_plots='bootstrap_emperor_plots')
-)
-
-unweighted_dm = use.get_artifact_collection_member(
-    'unweighted_dm', core_metrics.distance_matrices, 'jaccard_distance_matrix')
-unweighted_pcoa = use.get_artifact_collection_member(
-    'unweighted_pcoa', core_metrics.pcoas, 'jaccard')
-
-weighted_dm = use.get_artifact_collection_member(
-    'weighted_dm', core_metrics.distance_matrices, 'braycurtis_distance_matrix')
-weighted_pcoa = use.get_artifact_collection_member(
-    'weighted_pcoa', core_metrics.pcoas, 'braycurtis')
-
-richness_vector = use.get_artifact_collection_member(
-    'richness_vector', core_metrics.alpha_diversities, 'observed_features')
-evenness_vector = use.get_artifact_collection_member(
-    'evenness_vector', core_metrics.alpha_diversities, 'evenness')
+How many total sequences will you be analyzing in the `kmer-diversity` command?
 :::
 
 ::::{margin}
@@ -587,71 +510,78 @@ You will typically want to exclude those from the analysis by choosing a larger 
 :::
 ::::
 
-After computing diversity metrics, we can begin to explore the microbial composition of the samples in the context of the sample metadata.
-You can review the sample metadata using one of the tabulated views of this file that [we created above](#sample-metadata-tabulate-viz).
+I'm going to choose values that is around the first quartile of the sample total frequencies.
 
-:::{exercise}
-Open one of the Emperor plots that was generated by the previous command, and experiment with the options for coloring by metadata.
-Which of the metadata categories results in samples grouping most by color?
+:::{describe-usage}
+kmer_diversity = use.action(
+    use.UsageAction(plugin_id='boots',
+                    action_id='kmer_diversity'),
+    use.UsageInputs(table=asv_table_ms2,
+                    sequences=asv_seqs_ms2,
+                    metadata=sample_metadata,
+                    sampling_depth=96,
+                    n=10,
+                    replacement=True,
+                    alpha_average_method='median',
+                    beta_average_method='medoid'),
+    use.UsageOutputNames(
+        resampled_tables='bootstrap_tables',
+        kmer_tables='kmer_tables',
+        alpha_diversities='bootstrap_alpha_diversities',
+        distance_matrices='bootstrap_distance_matrices',
+        pcoas='bootstrap_pcoas',
+        scatter_plot='kmer_diversity_scatter_plot')
+)
+
+unweighted_dm = use.get_artifact_collection_member(
+    'unweighted_dm', kmer_diversity.distance_matrices, 'jaccard_distance_matrix')
+unweighted_pcoa = use.get_artifact_collection_member(
+    'unweighted_pcoa', kmer_diversity.pcoas, 'jaccard')
+
+weighted_dm = use.get_artifact_collection_member(
+    'weighted_dm', kmer_diversity.distance_matrices, 'braycurtis_distance_matrix')
+weighted_pcoa = use.get_artifact_collection_member(
+    'weighted_pcoa', kmer_diversity.pcoas, 'braycurtis')
+
+richness_vector = use.get_artifact_collection_member(
+    'richness_vector', kmer_diversity.alpha_diversities, 'observed_features')
+evenness_vector = use.get_artifact_collection_member(
+    'evenness_vector', kmer_diversity.alpha_diversities, 'evenness')
 :::
 
-#### Integrating additional information into PCoA scatter plots
-
-The PCoA results that were computed by `core-metrics` are viewable as metadata, which opens them up to use with [the vizard plugin](xref:q2doc-amplicon-target#q2-plugin-diversity).
-Vizard is a general purpose plotting plugin, and works with any artifacts that can be viewed as metadata.
-This opens up a world of possibility in how you visualize your microbiome data with QIIME 2.
-For example, let's integrate our Jaccard PCoA results with our Observed Features data and our sample metadata in a vizard scatterplot.
-
 ::::{margin}
-:::{tip}
-When looking at the PCoA as metadata, the columns labels "Axis 1", "Axis 2", ... are the first, second, ... PCoA axes.
+:::{warning}
+Remember that we're working with a small subset of a full sequencing run in this tutorial, to keep the runtime short for the tutorial.
+As a result the value used for `sampling-depth` here is very low.
+Often this might be closer to 10,000 for an Illumina MiSeq run (as of 2025), but this is highly dependent on the sequencing run, the number of samples included, and other factors.
 :::
 ::::
 
-:::{describe-usage}
-unweighted_pcoa_as_md = use.view_as_metadata('unweighted_pcoa_as_md', unweighted_pcoa)
-richness_as_md = use.view_as_metadata('richness_as_md', richness_vector)
-unweighted_vizard_md = use.merge_metadata('unweighted_vizard_md', sample_metadata, unweighted_pcoa_as_md, richness_as_md)
+After computing diversity metrics, we can begin to explore the microbial composition of the samples in the context of the sample metadata.
+You can review the sample metadata using one of the tabulated views of this file that [we created above](#sample-metadata-tabulate-viz).
 
-use.action(
-    use.UsageAction(plugin_id='vizard',
-                    action_id='scatterplot_2d'),
-    use.UsageInputs(metadata=unweighted_vizard_md),
-    use.UsageOutputNames(visualization='unweighted_diversity_scatterplot'))
-:::
+:::{exercise} Learn to use the interactive scatter plot.
+Open the scatter plot that was generated by the previous command, and plot the first two ordination axes computed from the Bray-Curtis distances.
 
-:::{exercise} Richness scatterplot.
-Which sample types have the lowest richness?
-Does richness appear to be correlated with any of the PCoA axes?
-:::
-
-Let's generate another vizard plot, but this time using our Bray-Curtis PCoA results.
-
-:::{describe-usage}
-
-weighted_pcoa_as_md = use.view_as_metadata('weighted_pcoa_as_md', weighted_pcoa)
-weighted_vizard_md = use.merge_metadata('weighted_vizard_md', sample_metadata, weighted_pcoa_as_md, richness_as_md)
-
-use.action(
-    use.UsageAction(plugin_id='vizard',
-                    action_id='scatterplot_2d'),
-    use.UsageInputs(metadata=weighted_vizard_md),
-    use.UsageOutputNames(visualization='weighted_diversity_scatterplot'))
+Experiment with plotting different information on the x and y axes.
+Change the *colorBy* and *colorPalette* selections.
+Which of the metadata categories results in samples grouping most by color?
 :::
 
 :::{exercise} Interpreting ordination plots.
-When plotting PCoA axes 1 and 2 and coloring by SampleType, is the HEC more similar to the food compost or HE samples?
+When plotting Bray-Curtis PCoA axes 1 and 2 and coloring by SampleType, is the HEC more similar to the food compost or HE samples?
 
 What sample type is the Microbe Mix most similar to?
 The inside of the toilet pre-use?
 The bulking material?
 
 What other interesting relationships do you see when changing the x- and y-axes and sample coloring?
+Which diversity axes (PCoA or alpha diversity results) appear to be correlated with one another?
 
 Which sample has the lowest microbiome richness?
 :::
 
-#### Alpha rarefaction plotting
+### Alpha rarefaction plotting
 
 In this section we'll explore alpha diversity as a function of sampling depth using the[`alpha-rarefaction` action](xref:q2doc-amplicon-target#q2-action-diversity-alpha-rarefaction).
 This visualizer computes one or more alpha diversity metrics at multiple sampling depths, in steps between 1 (optionally controlled with `min-depth`) and the value provided as `max-depth`.
@@ -659,15 +589,15 @@ At each sampling depth step, 10 rarefied tables will be generated, and the diver
 The number of iterations (rarefied tables computed at each sampling depth) can be controlled with the `iterations` parameter.
 Average diversity values will be plotted for each sample at each even sampling depth, and samples can be grouped based on metadata in the resulting visualization if sample metadata is provided.
 
-The value that you provide for `max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `kmer-table.qzv` file.
+The value that you provide for `max-depth` should be determined by reviewing the "Frequency per sample" information presented in the `asv-table-ms2.qzv` file.
 In general, choosing a value that is somewhere around the median frequency seems to work well, but you may want to increase that value if the lines in the resulting rarefaction plot don't appear to be leveling out, or decrease that value if you seem to be losing many of your samples due to low total frequencies closer to the minimum sampling depth than the maximum sampling depth.
 
 :::{describe-usage}
 use.action(
     use.UsageAction(plugin_id='diversity',
                     action_id='alpha_rarefaction'),
-    use.UsageInputs(table=kmer_table,
-                    max_depth=62000,
+    use.UsageInputs(table=asv_table_ms2,
+                    max_depth=260,
                     metadata=sample_metadata),
     use.UsageOutputNames(visualization='alpha_rarefaction'))
 :::
@@ -738,6 +668,7 @@ If in doubt, consult a statistician.
 We'll perform this analysis in a few steps.
 
 #### Filter samples from the feature table
+
 First, we'll filter our samples from our feature table such that we only have the three groups that we have the most samples for.
 
 :::{describe-usage}
@@ -752,6 +683,7 @@ asv_table_ms2_dominant_sample_types, = use.action(
 :::
 
 #### Collapse the ASVs into genera
+
 Then, we'll collapse our ASVs into genera (i.e. level 6 of the Greengenes taxonomy), to get more useful annotation of the features (and to learn how to perform this grouping).
 
 :::{describe-usage}
@@ -765,6 +697,7 @@ genus_table_ms2_dominant_sample_types, = use.action(
 :::
 
 #### Apply differential abundance testing
+
 Then, we'll apply ANCOM-BC to see which genera are differentially abundant across those sample types.
 I specify a reference level here as this defines what each group is compared against.
 Since the focus of this study is HEC, I choose that as my reference level.
@@ -803,7 +736,7 @@ Which genus is most depleted in HEC relative to Human Excrement?
 
 ## That's it for now, but more is coming soon!
 
-In the near future (as of 11 March 2025) we plan to integrate analyses using the [sample-classifier plugin](xref:q2doc-amplicon-target#q2-plugin-sample-classifier) and [longitudinal plugin](xref:q2doc-amplicon-target#q2-plugin-longitudinal).
+In the near future (as of 17 April 2025) we plan to integrate analyses using the [sample-classifier plugin](xref:q2doc-amplicon-target#q2-plugin-sample-classifier) and [longitudinal plugin](xref:q2doc-amplicon-target#q2-plugin-longitudinal).
 In the meantime, here are some suggestions to continue your learning:
 1. Build a machine learning classifier that classifies samples accordining to the three dominant sample types in the feature table that we used with ANCOM-BC.
  (Hint: see [`classify-samples`](xref:q2doc-amplicon-target#q2-action-sample-classifier-classify-samples).)
@@ -818,7 +751,7 @@ In the meantime, you can refer to you can refer to the [*Moving Pictures*](https
 ## Replay provenance (work in progress!)
 
 :::{warning}
-This section is a work in progress as of 11 March 2025.
+This section is a work in progress as of 17 April 2025.
 Right now this section only demonstrates replaying provenance from a single visualization, but this will be expanded to reflect the full analysis.
 Also, note that all commands for training the feature classifier are included in the resulting replay script (in case there are some commands in there that you don't remember running).
 More on this coming soon!
@@ -840,3 +773,6 @@ If you need help, head over to the [QIIME 2 Forum](https://forum.qiime2.org).
 [^build-requirements-exceed-resources]: The resource requirements exceed those provided by the [*Read the Docs* (RTD) build system](https://docs.readthedocs.com/platform/stable/builds.html#build-resources), which is used to build the documentation that you're reading.
  RTD provides systems with 7GB of RAM for 30 minutes maximum to build documentation.
  That's a very reasonable (and generous) allocation for building documentation, so we choose to work within those contraints rather than creating our own documentation build system like we've had in the past (e.g., for `https://docs.qiime2.org`).
+[^iab-database-searching]: kmerization of biological sequences is described in the [*Database Searching* chapter of *An Introduction to Applied Bioinformatics*](https://readiab.org/database-searching.html#kmer-content).
+[^iab-machine-learning]: This process is discussed in the [*Machine Learning in Bioinformatics* chapter of *An Introduction to Applied Bioinformatics*](https://readiab.org/machine-learning.html#unsupervised-learning).
+[^forum-diversity-metrics]: Learn more about the available metrics in [this QIIME 2 Forum post](https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282).
