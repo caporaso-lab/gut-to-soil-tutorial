@@ -14,7 +14,7 @@ Are you looking for:
 - information about the author? See [https://cap-lab.bio](https://cap-lab.bio).
 
 Otherwise, if you're specifically looking for *Gut-to-soil microbiome axis tutorial*, you're in the right place.
-[Read on... 📖](#tutorial)
+[Read on... 📖](#gut-to-soil-16S-tutorial)
 :::
 
 This site contains the [gut-to-soil axis](https://doi.org/10.48550/arXiv.2411.04148) microbiome analysis tutorial.
