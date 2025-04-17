@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - bioconda
 dependencies:
-  - qiime2-amplicon >= 2025.04.01.19.48
+  - qiime2-amplicon
   - nodejs
   - pip
   - pip:
