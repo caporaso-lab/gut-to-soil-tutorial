@@ -451,6 +451,15 @@ To learn about kmerization of features and how this relates to phylogenetic dive
 [q2-boots](https://library.qiime2.org/plugins/caporaso-lab/q2-boots) provides actions that mirror the interface of the diversity metric calculation actions in the diversity plugin, but generates more robust results because it integrates rarefaction and/or bootstrapping.
 You can learn more about this in the [q2-boots paper](https://doi.org/10.12688/f1000research.156295.1).
 
+::::{margin}
+:::{note}
+When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), normalization should be done at the ASV level before kmerization, not at the kmer level.
+This is automated by the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) action that we're using here.
+This is because you are trying to normalize by sequencing depth, not kmer complexity.
+In the end, the difference should not be huge but this distinction could be important for some metrics.
+:::
+::::
+
 [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) is a [`qiime2.Pipeline`](xref:q2doc-amplicon-target#term-pipeline): a type of action that links multiple other QIIME 2 actions together for convenience.
 As such, it does a lot of work.
 Here are the steps that it takes:
@@ -473,15 +482,6 @@ Here are the steps that it takes:
    These results can be used in subsequent analysis steps (e.g., ordination, statistical modeling, machine learning).
 5. Perform PCoA ordination on the averaged beta diversity distance matrices resulting from Step 4. [^iab-machine-learning]
 6. Generate an interactive [q2-vizard scatter plot](xref:q2doc-amplicon-target#q2-action-vizard-scatterplot-2d) that contains all user-provided sample metadata, all averaged alpha diversity metrics, and the first three ordination axes for all PCoA matrices computed in step 5.
-
-::::{margin}
-:::{note}
-When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), normalization should be done at the ASV level before kmerization, not at the kmer level.
-This is automated by the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) action that we're using here.
-This is because you are trying to normalize by sequencing depth, not kmer complexity.
-In the end, the difference should not be huge but this distinction could be important for some metrics.
-:::
-::::
 
 ::::{margin}
 :::{note}
