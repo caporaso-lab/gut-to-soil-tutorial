@@ -521,7 +521,7 @@ You will typically want to exclude those from the analysis by choosing a larger 
 I'm going to choose values that is around the first quartile of the sample total frequencies.
 
 :::{describe-usage}
-kmer_diversity = use.action(
+use.action(
     use.UsageAction(plugin_id='boots',
                     action_id='kmer_diversity'),
     use.UsageInputs(table=asv_table_ms2,
@@ -540,21 +540,6 @@ kmer_diversity = use.action(
         pcoas='bootstrap_pcoas',
         scatter_plot='kmer_diversity_scatter_plot')
 )
-
-unweighted_dm = use.get_artifact_collection_member(
-    'unweighted_dm', kmer_diversity.distance_matrices, 'jaccard_distance_matrix')
-unweighted_pcoa = use.get_artifact_collection_member(
-    'unweighted_pcoa', kmer_diversity.pcoas, 'jaccard')
-
-weighted_dm = use.get_artifact_collection_member(
-    'weighted_dm', kmer_diversity.distance_matrices, 'braycurtis_distance_matrix')
-weighted_pcoa = use.get_artifact_collection_member(
-    'weighted_pcoa', kmer_diversity.pcoas, 'braycurtis')
-
-richness_vector = use.get_artifact_collection_member(
-    'richness_vector', kmer_diversity.alpha_diversities, 'observed_features')
-evenness_vector = use.get_artifact_collection_member(
-    'evenness_vector', kmer_diversity.alpha_diversities, 'evenness')
 :::
 
 ::::{margin}
