@@ -485,7 +485,9 @@ In the end, the difference should not be huge but this distinction could be impo
 
 ::::{margin}
 :::{note}
-[q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) decomposes each sequence into its constituent kmers. This should be carefully considered when interpreting alpha-diversity in particular, as the number of observed features (for example) would correspond to the number of unique kmers observed in a sample (representing the genetic diversity), not the number of unique sequences or taxa. For more information, read the [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24) paper.
+[q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) decomposes each sequence into its constituent kmers. 
+This should be carefully considered when interpreting alpha-diversity in particular, as the number of observed features (for example) would correspond to the number of unique kmers observed in a sample (representing the genetic diversity), not the number of unique sequences or taxa. 
+For more information, read the [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24) paper.
 :::
 ::::
 
