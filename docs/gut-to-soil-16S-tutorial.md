@@ -8,13 +8,13 @@ Commands/urls/text may be unreliable while in development.
 :::
 
 :::{note}
-This document was built with its own conda environment that includes the amplicon distribution and the standalone plugins [q2-boots](https://doi.org/10.12688/f1000research.156295.1) and [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24)..
+This document was built with its own conda environment that includes the amplicon distribution and the standalone plugins [q2-boots](https://doi.org/10.12688/f1000research.156295.1) and [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24).
 You can download the environment file that was used from the download link on the top-right of this article.
 :::
 
 ## Background
 
-In this tutorial you'll learn an end-to-end microbiome marker gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
+In this tutorial you'll learn an end-to-end microbiome marker-gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
 The full data set for the paper can be found in [the study's Artifact Repository](https://doi.org/10.5281/zenodo.13887456).
 In the final step (**not yet written, as of 17 April 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
@@ -431,7 +431,7 @@ The reference based approach, by default, is specific to 16S rRNA marker gene an
 We could use that here, but the runtime is too long for our documentation.[^build-requirements-exceed-resources]
 If you'd like to see this demonstrated, you can refer to the [*Parkinson's Mouse* tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/).
 
-The *de novo* approach is known to generate low quality trees, but can be used with any phylogenetically informative marker gene (not just 16S).
+The *de novo* approach is known to generate low quality trees when very short sequences are used as input, but can be used with any phylogenetically informative marker gene (not just 16S).
 If you'd like to see this demonstrated, you can refer to the [*Moving Pictures* tutorial](https://amplicon-docs.readthedocs.io/en/latest/tutorials/moving-pictures.html#generate-a-tree-for-phylogenetic-diversity-analyses).
 
 For those reasons, we're going to skip building phylogenetic trees and instead use an analog of phylogenetic diversity metrics here.
@@ -460,7 +460,7 @@ Here are the steps that it takes:
 2. For each feature table resulting from step 1, using the input sequences (i.e., the ASV sequences), kmerize all sequences into kmers of length `kmer-size`. [^iab-database-searching]
    Use this information to create one kmer table per resampled feature table.
    This will result in `n` feature tables, where the features are kmers (instead of ASVs, as in the input feature table).
-3. Compute the user requested alpha and beta diversity metrics on each of the kmer tables resulting from step 2. [^forum-diversity-metrics]
+3. Compute the user-requested alpha- and beta-diversity metrics on each of the kmer tables resulting from step 2. [^forum-diversity-metrics]
    The metrics computed by default are:
     * Alpha diversity
       * Shannon's diversity index (a quantitative measure of community richness)
@@ -477,16 +477,22 @@ Here are the steps that it takes:
 ::::{margin}
 :::{note}
 When using [q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer), normalization should be done at the ASV level before kmerization, not at the kmer level.
-This is automated by the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) that we're using here.
+This is automated by the [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) action that we're using here.
 This is because you are trying to normalize by sequencing depth, not kmer complexity.
 In the end, the difference should not be huge but this distinction could be important for some metrics.
 :::
 ::::
 
+::::{margin}
+:::{note}
+[q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) decomposes each sequence into its constituent kmers. This should be carefully considered when interpreting alpha-diversity in particular, as the number of observed features (for example) would correspond to the number of unique kmers observed in a sample (representing the genetic diversity), not the number of unique sequences or taxa. For more information, read the [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24) paper.
+:::
+::::
+
 A key parameter that needs to be provided to [`kmer-diversity`](xref:q2-boots-target#q2-action-boots-kmer-diversity) is `sampling-depth`, which is the even sampling (i.e., bootstrapping or rarefaction) depth.
-Because most diversity metrics are sensitive to different sampling depths across different samples, the tables are randomly subsampled such that the total frequency for each sample is the user-specified sampling depth.
-For example, if you set `sampling-depth=500`, this step will subsample the counts in each sample so that each sample in the resulting table has a total frequency of 500.
-If the total frequency for any sample(s) are smaller than this value, those samples will be dropped from the diversity analysis.
+Because most diversity metrics are sensitive to different sampling depths (i.e., sequence counts) across different samples, the tables are randomly subsampled such that the total frequency for each sample is the user-specified sampling depth.
+For example, if you set `sampling-depth=500`, this step will subsample the sequence counts in each sample so that each sample in the resulting table has a total frequency of 500.
+If the total frequency (i.e., the number of sequences observed) for any sample(s) is smaller than this value, those samples will be dropped from the diversity analysis.
 Choosing this value is tricky.
 We recommend making your choice by reviewing the information presented in the `asv-table-ms2.qzv` file that [you created above](#summarize-asv-table-ms2).
 
