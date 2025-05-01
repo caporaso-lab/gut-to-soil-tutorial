@@ -24,6 +24,12 @@ Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified
 Paired-end sequencing was performed on an Illumina MiSeq.
 Full details are presented in [Meilander *et al.* (2024)](https://doi.org/10.48550/arXiv.2411.04148).
 
+::::{margin}
+:::{tip} Why study human excrement composting?
+Get our take on that [here](https://gut-to-soil-tutorial.readthedocs.io/en/latest/why.html).
+:::
+::::
+
 (gut-to-soil-tutorial:sample-metadata)=
 ## Sample metadata
 
@@ -485,8 +491,8 @@ Here are the steps that it takes:
 
 ::::{margin}
 :::{note}
-[q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) decomposes each sequence into its constituent kmers. 
-This should be carefully considered when interpreting alpha-diversity in particular, as the number of observed features (for example) would correspond to the number of unique kmers observed in a sample (representing the genetic diversity), not the number of unique sequences or taxa. 
+[q2-kmerizer](https://library.qiime2.org/plugins/bokulich-lab/q2-kmerizer) decomposes each sequence into its constituent kmers.
+This should be carefully considered when interpreting alpha-diversity in particular, as the number of observed features (for example) would correspond to the number of unique kmers observed in a sample (representing the genetic diversity), not the number of unique sequences or taxa.
 For more information, read the [q2-kmerizer](https://doi.org/10.1128/msystems.01550-24) paper.
 :::
 ::::
