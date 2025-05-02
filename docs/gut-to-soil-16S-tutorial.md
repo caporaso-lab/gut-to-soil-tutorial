@@ -397,7 +397,7 @@ asv_frequencies_ms2_as_md = use.view_as_metadata('asv_frequencies',
                                                  asv_frequencies_ms2)
 
 taxonomy_collection = use.construct_artifact_collection(
-    'taxonomy_collection', {'Greengenes-13-8': taxonomy}
+    'taxonomy_collection', {'Greengenes_13_8': taxonomy}
 )
 
 use.action(
