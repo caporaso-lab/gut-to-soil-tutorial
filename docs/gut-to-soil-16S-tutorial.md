@@ -648,10 +648,10 @@ Visualize the samples at *Level 2* (which corresponds to the phylum level in thi
 What are the dominant phyla in each in `SampleType`?
 :::
 
-### Differential abundance testing with ANCOM-BC
+### Differential abundance testing with ANCOM-BC2
 
-[ANCOM-BC](https://doi.org/10.1038/s41467-020-17041-7) is a compositionally-aware linear regression model that allows testing for differentially abundant features across sample groups while also implementing bias correction.
-This can be accessed using the [`ancombc` action](xref:q2doc-amplicon-target#q2-action-composition-ancombc) in the [composition plugin](xref:q2doc-amplicon-target#q2-plugin-composition).
+[ANCOM-BC2](https://doi.org/10.1038/s41592-023-02092-7) is a compositionally-aware linear regression model that allows testing for differentially abundant features across sample groups while also implementing bias correction.
+This can be accessed using the [`ancombc2` action](xref:q2doc-amplicon-target#q2-action-composition-ancombc2) in the [composition plugin](xref:q2doc-amplicon-target#q2-plugin-composition).
 
 ::::{margin}
 :::{warning} Differential abundance testing is easy to get wrong! ☠️
@@ -681,9 +681,56 @@ asv_table_ms2_dominant_sample_types, = use.action(
     use.UsageOutputNames(filtered_table='asv_table_ms2_dominant_sample_types'))
 :::
 
-#### Collapse the ASVs into genera
+#### Apply differential abundance testing
 
-Then, we'll collapse our ASVs into genera (i.e. level 6 of the Greengenes taxonomy), to get more useful annotation of the features (and to learn how to perform this grouping).
+Then, we'll apply ANCOM-BC2 to see which ASV are differentially abundant across those sample types.
+I specify a reference level here as this defines what each group is compared against.
+Since the focus of this study is HEC, I choose that as my reference level.
+That will let us see what ASVs are over- or under-represented in the other two sample groups (*Human Excrement* and *Food Compost*) relative to HEC, as HEC defines the "global intercept" that will be measured against.
+
+:::{describe-usage}
+ancombc2_results, = use.action(
+    use.UsageAction(plugin_id='composition',
+                    action_id='ancombc2'),
+    use.UsageInputs(table=asv_table_ms2_dominant_sample_types,
+                    metadata=sample_metadata,
+                    fixed_effects_formula='SampleType',
+                    reference_levels=['SampleType::Human Excrement Compost']),
+    use.UsageOutputNames(ancombc2_output='ancombc2_results'))
+:::
+
+Finally, we'll visualize the results.
+Taxonomic annotations can optionally be provided here: this helps make ASVs ids more interpretable.
+
+:::{describe-usage}
+use.action(
+    use.UsageAction(plugin_id='composition',
+                    action_id='ancombc2_visualizer'),
+    use.UsageInputs(data=ancombc2_results,
+                    taxonomy=taxonomy),
+    use.UsageOutputNames(visualization='ancombc2-barplot'))
+:::
+
+:::{exercise}
+Which genus is most enriched in HEC relative to Food Compost?
+Which genus is most enriched in HEC relative to Human Excrement?
+
+Which genus is most depleted in HEC relative to Food Compost?
+Which genus is most depleted in HEC relative to Human Excrement?
+:::
+
+:::{exercise} Perform ANCOM-BC2 on genera, instead of ASVs.
+:label: ancombc2-genera
+You might be interested in performing ANCOM-BC2 (or other analyses) with ASVs grouped based on the genus they are derived from, rather than on the ASVs themselves.
+This may or may not increase your statistical power -- for example, if all organisms in a genus have a similar impact on their host or environment, you may want to know if that genus is differentially abundance across some category of interest.
+Take a look at the documentation for the [`collapse`](xref:q2doc-amplicon-target#q2-action-taxa-collapse) action.
+How would you use this to collapse our ASV table at the genus level, and then run ANCOM-BC2 on that table?
+:::
+
+::::{solution} ancombc2-genera
+:class: dropdown
+
+To collapse our ASVs into genera (i.e. level 6 of the Greengenes taxonomy), we can use the following command.
 
 :::{describe-usage}
 genus_table_ms2_dominant_sample_types, = use.action(
@@ -695,43 +742,31 @@ genus_table_ms2_dominant_sample_types, = use.action(
     use.UsageOutputNames(collapsed_table='genus_table_ms2_dominant_sample_types'))
 :::
 
-#### Apply differential abundance testing
-
-Then, we'll apply ANCOM-BC to see which genera are differentially abundant across those sample types.
-I specify a reference level here as this defines what each group is compared against.
-Since the focus of this study is HEC, I choose that as my reference level.
-That will let us see what genera are over- or under-represented in the other two sample groups (*Human Excrement* and *Food Compost*) relative to HEC, as HEC defines the "global intercept" that will be measured against.
+We can then provide the resulting table as the input to ANCOM-BC2.
 
 :::{describe-usage}
-genus_ancombc, = use.action(
+genus_ancombc2_results, = use.action(
     use.UsageAction(plugin_id='composition',
-                    action_id='ancombc'),
+                    action_id='ancombc2'),
     use.UsageInputs(table=genus_table_ms2_dominant_sample_types,
                     metadata=sample_metadata,
-                    formula='SampleType',
+                    fixed_effects_formula='SampleType',
                     reference_levels=['SampleType::Human Excrement Compost']),
-    use.UsageOutputNames(differentials='genus_ancombc'))
+    use.UsageOutputNames(ancombc2_output='genus_ancombc2_results'))
 :::
 
-Finally, we'll visualize the results.
+And finally, we can visualize the results.
+Notice that in this case we're not providing the taxonomy, because we've already intergrated that information by collapsing at the genus level.
 
 :::{describe-usage}
 use.action(
     use.UsageAction(plugin_id='composition',
-                    action_id='da_barplot'),
-    use.UsageInputs(data=genus_ancombc,
-                    significance_threshold=0.001,
-                    level_delimiter=';'),
-    use.UsageOutputNames(visualization='genus_ancombc'))
+                    action_id='ancombc2_visualizer'),
+    use.UsageInputs(data=genus_ancombc2_results),
+    use.UsageOutputNames(visualization='genus-ancombc2-barplot'))
 :::
 
-:::{exercise}
-Which genus is most enriched in HEC relative to Food Compost?
-Which genus is most enriched in HEC relative to Human Excrement?
-
-Which genus is most depleted in HEC relative to Food Compost?
-Which genus is most depleted in HEC relative to Human Excrement?
-:::
+::::
 
 ## That's it for now, but more is coming soon!
 
