@@ -1,14 +1,14 @@
 channels:
-- https://packages.qiime2.org/qiime2/2025.4/amplicon/passed
+- https://packages.qiime2.org/qiime2/2025.7/amplicon/passed
 - conda-forge
 - bioconda
 dependencies:
   - qiime2-amplicon
   - nodejs
+  - hdmedians
   - pip
   - pip:
     - q2doc@git+https://github.com/qiime2/q2doc@dev
     - jupyter-book>=2.0.0a1
     - q2_kmerizer@git+https://github.com/bokulich-lab/q2-kmerizer.git@main
     - q2_boots@git+https://github.com/caporaso-lab/q2-boots.git@main
-    - hdmedians
