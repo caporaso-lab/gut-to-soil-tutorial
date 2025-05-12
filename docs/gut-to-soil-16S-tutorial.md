@@ -50,7 +50,7 @@ To learn more about metadata standards, you can refer to [Chloe Herman's video o
 
 sample_metadata = use.init_metadata_from_url(
    'sample-metadata',
-   'https://www.dropbox.com/scl/fi/irosimbb1aud1aa7frzxf/sample-metadata.tsv?rlkey=f45jpxzajjz9xx9vpvfnf1zjx&st=nahafuvy&dl=1')
+   'https://zenodo.org/records/15390940/files/gut-to-soil-tutorial-sample-metadata.tsv?download=1')
 :::
 
 QIIME 2's [metadata plugin](xref:q2doc-amplicon-target#q2-plugin-metadata) provides a [Visualizer called `tabulate`](xref:q2doc-amplicon-target#q2-action-metadata-tabulate) that generates a convenient view of a sample metadata file.
@@ -98,7 +98,7 @@ It should be easy for them to generate.
 
 demux = use.init_artifact_from_url(
    'demux',
-   'https://www.dropbox.com/scl/fi/73f6rmcq7lelug5qbuhl6/demux-10p.qza?rlkey=s0hoh326fes3z2usvgs62tv3c&st=caz1avkn&dl=1')
+   'https://zenodo.org/records/15390940/files/gut-to-soil-tutorial-nano2-demux-10p.qza?download=1')
 :::
 
 ## Summarize demultiplexed sequences
