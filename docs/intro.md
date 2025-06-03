@@ -17,7 +17,7 @@ Otherwise, if you're specifically looking for *Gut-to-soil microbiome axis tutor
 [Read on... 📖](#gut-to-soil-16S-tutorial)
 :::
 
-This site contains the [gut-to-soil axis](https://doi.org/10.48550/arXiv.2411.04148) microbiome analysis tutorial.
+This site contains the [gut-to-soil axis](https://doi.org/10.1093/ismeco/ycaf089) microbiome analysis tutorial.
 This is data-set-specific documentation.
 At present, it presents an amplicon analysis tutorial but over time we expect this to grow and contain tutorials and other content that cross QIIME 2 distributions.
 

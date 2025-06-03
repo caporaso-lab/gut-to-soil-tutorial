@@ -14,7 +14,7 @@ You can download the environment file that was used from the download link on th
 
 ## Background
 
-In this tutorial you'll learn an end-to-end microbiome marker-gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.48550/arXiv.2411.04148).
+In this tutorial you'll learn an end-to-end microbiome marker-gene data science workflow, building on data presented in [Meilander *et al.* (2024): Upcycling Human Excrement: The Gut Microbiome to Soil Microbiome Axis](https://doi.org/10.1093/ismeco/ycaf089).
 The data used here is a subset (a single sequencing run) of that generated for the paper, specifically selected so that this tutorial can be run quickly on a personal computer.
 The full data set for the paper can be found in [the study's Artifact Repository](https://doi.org/10.5281/zenodo.13887456).
 In the final step (**not yet written, as of 17 April 2025**), you'll learn how to adapt the workflow for use in analyzing your own data using [Provenance Replay](https://doi.org/10.1371/journal.pcbi.1011676).
@@ -22,7 +22,7 @@ In the final step (**not yet written, as of 17 April 2025**), you'll learn how t
 The data used in this tutorial was generated using the [Earth Microbiome Project protocol](https://doi.org/10.1038/ismej.2012.8).
 Specifically, the hypervariable region 4 (V4) of the 16S rRNA gene was amplified using the F515-R806 primers - a broad-coverage primer pair for Bacteria that also amplifies some Archaea.
 Paired-end sequencing was performed on an Illumina MiSeq.
-Full details are presented in [Meilander *et al.* (2024)](https://doi.org/10.48550/arXiv.2411.04148).
+Full details are presented in [Meilander *et al.* (2024)](https://doi.org/10.1093/ismeco/ycaf089).
 
 ::::{margin}
 :::{tip} Why study human excrement composting?
